@@ -100,7 +100,7 @@
       .gallery-grid-item:first-child { grid-row: auto; }
     }
 
-    /* AKZENT-FARBEN FÜR DIE BADGES */
+    /* BADGE FARBEN */
     .badge { 
       display: inline-block; 
       padding: 0.25rem 0.65rem; 
@@ -139,6 +139,16 @@
 
     .detail-grid-container { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-top: 1.5rem; }
     @media (max-width: 768px) { .detail-grid-container { grid-template-columns: 1fr; } }
+
+    /* MULTI-STEP CHECKOUT STYLES */
+    .step-indicator { display: flex; justify-content: space-between; margin-bottom: 1.5rem; position: relative; }
+    .step-indicator::before { content: ''; position: absolute; top: 15px; left: 0; right: 0; height: 2px; background: var(--pico-border-color); z-index: 1; }
+    .step-item { position: relative; z-index: 2; background: var(--pico-card-background-color); padding: 0 10px; display: flex; flex-direction: column; align-items: center; font-size: 0.8rem; font-weight: 600; color: var(--pico-muted-color); }
+    .step-number { width: 32px; height: 32px; border-radius: 50%; background: var(--pico-border-color); color: var(--pico-color); display: flex; align-items: center; justify-content: center; margin-bottom: 4px; font-weight: bold; }
+    .step-item.active .step-number { background: var(--pico-primary); color: #fff; }
+    .step-item.active { color: var(--pico-color); }
+    .step-item.completed .step-number { background: #15803d; color: #fff; }
+    .step-buttons { display: flex; justify-content: space-between; margin-top: 1.5rem; gap: 10px; }
   </style>
 </head>
 <body>
@@ -224,86 +234,137 @@
 
         <hr style="margin: 2rem 0;">
 
-        <!-- BUCHUNGSFORMULAR -->
-        <h3>Apartment verbindlich buchen</h3>
+        <!-- MULTI-STEP BUCHUNG -->
+        <h3>Apartment buchen</h3>
+        
+        <div class="step-indicator">
+          <div class="step-item active" id="step-tab-1">
+            <div class="step-number">1</div>
+            <span>Reisedaten</span>
+          </div>
+          <div class="step-item" id="step-tab-2">
+            <div class="step-number">2</div>
+            <span>Kontaktdaten</span>
+          </div>
+          <div class="step-item" id="step-tab-3">
+            <div class="step-number">3</div>
+            <span>Rechnung</span>
+          </div>
+        </div>
+
         <form id="booking-form" onsubmit="handleBookingSubmit(event)">
           <input type="hidden" id="form-apt-title">
           <input type="hidden" id="form-apt-code">
 
-          <div class="grid">
-            <div>
-              <label for="form-start">Anreise</label>
-              <input type="date" id="form-start" required>
-            </div>
-            <div>
-              <label for="form-end">Abreise</label>
-              <input type="date" id="form-end" required>
-            </div>
-          </div>
-
-          <label for="form-company">Firma / Unternehmensname</label>
-          <input type="text" id="form-company" placeholder="z. B. Muster Bau GmbH" required>
-
-          <label for="form-vatid">Umsatzsteuer-ID (USt-ID)</label>
-          <input type="text" id="form-vatid" placeholder="DE123456789" required>
-
-          <fieldset style="margin-bottom: 1rem;">
-            <legend><strong>Rechnungsanschrift</strong></legend>
-            <div class="grid">
-              <div style="grid-column: span 2;">
-                <label for="form-street">Straße & Hausnummer</label>
-                <input type="text" id="form-street" placeholder="Musterstraße 12" required>
-              </div>
-            </div>
+          <!-- SCHRITT 1: REISE & ZYKLUS -->
+          <div id="step-1">
             <div class="grid">
               <div>
-                <label for="form-zip">PLZ</label>
-                <input type="text" id="form-zip" placeholder="75175" required>
+                <label for="form-start">Anreise</label>
+                <input type="date" id="form-start" required>
               </div>
               <div>
-                <label for="form-city">Ort</label>
-                <input type="text" id="form-city" placeholder="Pforzheim" required>
+                <label for="form-end">Abreise</label>
+                <input type="date" id="form-end" required>
               </div>
             </div>
-            <label for="form-country">Land</label>
-            <input type="text" id="form-country" value="Deutschland" required>
-          </fieldset>
 
-          <div class="grid">
-            <div>
-              <label for="form-email">E-Mail-Adresse</label>
-              <input type="email" id="form-email" placeholder="name@firma.de" required>
+            <div class="grid">
+              <div>
+                <label for="form-guests">Anzahl der Personen</label>
+                <input type="number" id="form-guests" value="4" min="1" required>
+              </div>
+              <div>
+                <label for="form-billing-cycle">Abrechnungszyklus</label>
+                <select id="form-billing-cycle" required>
+                  <option value="14-taegig" selected>14-tägige Abrechnung</option>
+                  <option value="woechentlich">Wöchentliche Abrechnung</option>
+                  <option value="monatlich">Monatliche Abrechnung</option>
+                  <option value="gesamt">Gesamtzahlung bei Anreise</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label for="form-phone">Telefon / WhatsApp <small>(optional)</small></label>
-              <input type="text" id="form-phone" placeholder="+49 170 1234567">
-            </div>
-          </div>
 
-          <div class="grid">
-            <div>
-              <label for="form-guests">Anzahl der Personen</label>
-              <input type="number" id="form-guests" value="4" min="1" required>
-            </div>
-            <div>
-              <label for="form-ref">Referenznummer <small>(optional)</small></label>
-              <input type="text" id="form-ref" placeholder="z. B. Projekt 2026-B">
+            <div class="step-buttons">
+              <div></div>
+              <button type="button" onclick="goToStep(2)" style="width: auto;">Weiter zu Kontaktdaten →</button>
             </div>
           </div>
 
-          <blockquote style="margin: 1.5rem 0; font-size: 0.85rem;">
-            <strong>Wichtiger Hinweis zu Stornierungen:</strong> Kostenfreie Stornierung per E-Mail bis 14 Tage vor Anreise. Bei späterer Stornierung oder Nichtanreise (No-Show) fallen 100% Stornogebühren an.
-          </blockquote>
+          <!-- SCHRITT 2: KONTAKTDATEN & FIRMA -->
+          <div id="step-2" class="hidden">
+            <label for="form-company">Firma / Unternehmensname</label>
+            <input type="text" id="form-company" placeholder="z. B. Muster Bau GmbH" required>
 
-          <fieldset>
-            <label for="form-agb">
-              <input type="checkbox" id="form-agb" required>
-              Ich akzeptiere die <a href="https://l8street.com/agb" target="_blank">AGB</a> sowie die 
-              <a href="https://l8street.com/datenschutz" target="_blank">Datenschutzerklärung</a>.
-            </label>
-          </fieldset>
+            <div class="grid">
+              <div>
+                <label for="form-vatid">Umsatzsteuer-ID (USt-ID)</label>
+                <input type="text" id="form-vatid" placeholder="DE123456789">
+              </div>
+              <div>
+                <label for="form-ref">Referenznummer <small>(optional)</small></label>
+                <input type="text" id="form-ref" placeholder="z. B. Projekt 2026-B">
+              </div>
+            </div>
 
-          <button type="submit">Jetzt verbindlich buchen</button>
+            <div class="grid">
+              <div>
+                <label for="form-email">E-Mail-Adresse (für Rechnungen)</label>
+                <input type="email" id="form-email" placeholder="name@firma.de" required>
+              </div>
+              <div>
+                <label for="form-phone">Telefon / WhatsApp</label>
+                <input type="text" id="form-phone" placeholder="+49 170 1234567" required>
+              </div>
+            </div>
+
+            <div class="step-buttons">
+              <button type="button" class="secondary outline" onclick="goToStep(1)" style="width: auto;">← Zurück</button>
+              <button type="button" onclick="goToStep(3)" style="width: auto;">Weiter zu Rechnungsanschrift →</button>
+            </div>
+          </div>
+
+          <!-- SCHRITT 3: RECHNUNGSANSCHRIFT & ABSCHLUSS -->
+          <div id="step-3" class="hidden">
+            <fieldset style="margin-bottom: 1rem;">
+              <legend><strong>Rechnungsanschrift</strong></legend>
+              <div class="grid">
+                <div style="grid-column: span 2;">
+                  <label for="form-street">Straße & Hausnummer</label>
+                  <input type="text" id="form-street" placeholder="Musterstraße 12" required>
+                </div>
+              </div>
+              <div class="grid">
+                <div>
+                  <label for="form-zip">PLZ</label>
+                  <input type="text" id="form-zip" placeholder="75175" required>
+                </div>
+                <div>
+                  <label for="form-city">Ort</label>
+                  <input type="text" id="form-city" placeholder="Pforzheim" required>
+                </div>
+              </div>
+              <label for="form-country">Land</label>
+              <input type="text" id="form-country" value="Deutschland" required>
+            </fieldset>
+
+            <blockquote style="margin: 1.5rem 0; font-size: 0.85rem;">
+              <strong>Wichtiger Hinweis zu Stornierungen:</strong> Kostenfreie Stornierung per E-Mail bis 14 Tage vor Anreise. Bei späterer Stornierung oder Nichtanreise (No-Show) fallen 100% Stornogebühren an.
+            </blockquote>
+
+            <fieldset>
+              <label for="form-agb">
+                <input type="checkbox" id="form-agb" required>
+                Ich akzeptiere die <a href="https://l8street.com/agb" target="_blank">AGB</a> sowie die 
+                <a href="https://l8street.com/datenschutz" target="_blank">Datenschutzerklärung</a>.
+              </label>
+            </fieldset>
+
+            <div class="step-buttons">
+              <button type="button" class="secondary outline" onclick="goToStep(2)" style="width: auto;">← Zurück</button>
+              <button type="submit" style="width: auto;">Jetzt verbindlich buchen</button>
+            </div>
+          </div>
         </form>
 
         <p id="form-msg" style="text-align: center; font-weight: bold; margin-top: 1rem;"></p>
@@ -330,6 +391,7 @@
     let currentResults = [];
     let currentGalleryImages = [];
     let currentImageIndex = 0;
+    let currentStep = 1;
 
     window.onload = function() {
       const urlParams = new URLSearchParams(window.location.search);
@@ -347,6 +409,38 @@
       }
     };
 
+    function goToStep(stepNum) {
+      // Validierung vor dem Weitergehen
+      if (stepNum > currentStep) {
+        if (currentStep === 1) {
+          if (!document.getElementById('form-start').value || !document.getElementById('form-end').value) {
+            alert("Bitte wählen Sie Anreise- und Abreisedatum aus.");
+            return;
+          }
+        } else if (currentStep === 2) {
+          if (!document.getElementById('form-company').value || !document.getElementById('form-email').value) {
+            alert("Bitte füllen Sie Unternehmensname und E-Mail-Adresse aus.");
+            return;
+          }
+        }
+      }
+
+      document.getElementById('step-1').classList.add('hidden');
+      document.getElementById('step-2').classList.add('hidden');
+      document.getElementById('step-3').classList.add('hidden');
+
+      document.getElementById('step-' + stepNum).classList.remove('hidden');
+
+      for (let i = 1; i <= 3; i++) {
+        const tab = document.getElementById('step-tab-' + i);
+        tab.classList.remove('active', 'completed');
+        if (i < stepNum) tab.classList.add('completed');
+        if (i === stepNum) tab.classList.add('active');
+      }
+
+      currentStep = stepNum;
+    }
+
     function loadApartments(city, isLanding) {
       document.getElementById('catalog-grid').innerHTML = '<p>Lade passende Angebote...</p>';
       
@@ -361,7 +455,7 @@
           renderCatalog(data, titleText);
           loadAvailabilitiesAsync(data.map(a => a.id));
         });
-  }
+    }
 
     function loadAvailabilitiesAsync(aptIds) {
       if (!aptIds || aptIds.length === 0) return;
@@ -469,6 +563,8 @@
         gridDiv.appendChild(img);
       });
 
+      goToStep(1);
+
       document.getElementById('view-search-results').classList.add('hidden');
       document.getElementById('view-apartment-detail').classList.remove('hidden');
       window.scrollTo(0, 0);
@@ -512,6 +608,7 @@
         email: document.getElementById('form-email').value,
         phone: document.getElementById('form-phone').value,
         guestsCount: document.getElementById('form-guests').value,
+        billingCycle: document.getElementById('form-billing-cycle').value,
         refNumber: document.getElementById('form-ref').value,
         userAgent: navigator.userAgent
       };
@@ -530,6 +627,7 @@
           msgEl.innerText = res.message;
           msgEl.style.color = "var(--pico-ins-color)";
           document.getElementById('booking-form').reset();
+          goToStep(1);
         } else {
           msgEl.innerText = res.message;
           msgEl.style.color = "var(--pico-del-color)";

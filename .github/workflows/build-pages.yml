@@ -3,25 +3,33 @@ name: Generate Static Pages from Google Sheet
 on:
   repository_dispatch:
     types: [sheet_updated]
-  workflow_dispatch: # Erlaubt manuelles Auslösen per Button auf GitHub
+  workflow_dispatch:
+
+# Berechtigungen für GitHub Pages deployment setzen
+permissions:
+  contents: write
+  pages: write
+  id-token: write
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Code auschecken
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Node.js einrichten
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Generierungs-Skript ausführen
         run: node generate.js
 
-      - name: Auf GitHub Pages veröffentlichen
-        uses: stefanzweinfalter/ghpages-action@master
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          subfolder: '.'
+      - name: Änderungen im Repository speichern und pushen
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Auto-generated apartment and city pages" || exit 0
+          git push

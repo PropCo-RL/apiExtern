@@ -16,25 +16,29 @@ async function buildSite() {
   console.log(`${apartments.length} Apartments gefunden.`);
 
   apartments.forEach(apt => {
-    const rawPath = apt.apartmentPath || apt.Apartment || "";
+    // Liest den Pfad direkt aus Spalte G (Apartment)
+    const rawPath = apt.Apartment || "";
     if (!rawPath) return;
 
-    // Säubert z.B. "/a/gera1" zu "a/gera1"
-    const cleanPath = rawPath.replace(/^\/+|\/+$/g, ''); 
+    // Entfernt führende/nachfolgende Slashes (z. B. "/a/gera1" -> "a/gera1")
+    const cleanPath = rawPath.toString().replace(/^\/+|\/+$/g, '').trim();
+    if (!cleanPath) return;
+
     const dir = path.join(process.cwd(), cleanPath);
 
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    const firstImg = (apt.images && apt.images.length > 0) ? apt.images[0] : 'https://via.placeholder.com/600x400';
+    // Liest das Bild aus Spalte V (Bilder Link in Google Drive)
+    const firstImg = apt['Bilder Link in Google Drive'] || 'https://via.placeholder.com/600x400';
 
     const htmlContent = `<!DOCTYPE html>
 <html lang="de" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${apt.title || 'Monteurwohnung'} | L8 Street</title>
+  <title>${apt.Title || 'Monteurwohnung'} | L8 Street</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css">
   <style>
     body { padding-bottom: 70px; margin: 0 !important; }
@@ -50,17 +54,17 @@ async function buildSite() {
     </nav>
   </header>
   <main class="container">
-    <h2>${apt.title || ''}</h2>
-    <p style="color: var(--pico-muted-color);">${apt.address || apt.city || ''}</p>
+    <h2>${apt.Title || ''}</h2>
+    <p style="color: var(--pico-muted-color);">${apt.Street || ''}, ${apt.ZIP || ''} ${apt.city || ''}</p>
     <div class="gallery">
-      <img src="${firstImg}" alt="${apt.title || 'Apartment'}">
+      <img src="${firstImg}" alt="${apt.Title || 'Apartment'}">
     </div>
     <div class="grid" style="margin: 1.5rem 0; background: #f8fafc; padding: 1rem; border-radius: 8px;">
-      <div><strong>Betten:</strong> ${apt.beds || 2} Betten</div>
-      <div><strong>Schlafzimmer:</strong> ${apt.rooms || 1} Zimmer</div>
-      <div><strong>Preis:</strong> ab ${apt.price || 49} € / Nacht</div>
+      <div><strong>Betten:</strong> ${apt.Betten || 2} Betten</div>
+      <div><strong>Schlafzimmer:</strong> ${apt.Schlafzimmer || 1} Zimmer</div>
+      <div><strong>Preis:</strong> ab ${apt.Preis || 49} € / Nacht</div>
     </div>
-    <a href="/?apt=${apt.id}" role="button" class="contrast" style="width: 100%; text-align: center; font-size: 1.1rem; padding: 0.8rem;">
+    <a href="/?apt=${apt.ID || ''}" role="button" class="contrast" style="width: 100%; text-align: center; font-size: 1.1rem; padding: 0.8rem;">
       Jetzt Verfügbarkeit prüfen & Buchen
     </a>
   </main>

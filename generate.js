@@ -15,14 +15,16 @@ async function buildSite() {
 
   console.log(`${apartments.length} Apartments gefunden.`);
 
-  // 1. DETAILSEITEN GENERIEREN (/a/gera1, /a/ax, etc.)
   apartments.forEach(apt => {
-    if (!apt.apartmentPath) return; // Pfad aus Spalte G (z.B. /a/gera1)
-    
-    // Entferne führende/nachfolgende Slashes
-    const cleanPath = apt.apartmentPath.replace(/^\/|\/$/g, ''); 
-    const dir = path.join(__dirname, cleanPath);
-    
+    // Falls Spalte G gefüllt ist (z.B. "/a/gera1" oder "/a/ax")
+    const rawPath = apt.apartmentPath || apt.Apartment || "";
+    if (!rawPath) return;
+
+    // Entfernt führende und nachfolgende Slashes, damit z.B. "a/gera1" entsteht
+    const cleanPath = rawPath.replace(/^\/+|\/+$/g, ''); 
+    const dir = path.join(process.cwd(), cleanPath);
+
+    // Erstellt die Ordnerstruktur (z. B. Ordner "a" -> Unterordner "gera1")
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
@@ -34,7 +36,7 @@ async function buildSite() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${apt.title} | L8 Street</title>
+  <title>${apt.title || 'Monteurwohnung'} | L8 Street</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css">
   <style>
     body { padding-bottom: 70px; margin: 0 !important; }
@@ -50,10 +52,10 @@ async function buildSite() {
     </nav>
   </header>
   <main class="container">
-    <h2>${apt.title}</h2>
-    <p style="color: var(--pico-muted-color);">${apt.address || apt.city}</p>
+    <h2>${apt.title || ''}</h2>
+    <p style="color: var(--pico-muted-color);">${apt.address || apt.city || ''}</p>
     <div class="gallery">
-      <img src="${firstImg}" alt="${apt.title}">
+      <img src="${firstImg}" alt="${apt.title || 'Apartment'}">
     </div>
     <div class="grid" style="margin: 1.5rem 0; background: #f8fafc; padding: 1rem; border-radius: 8px;">
       <div><strong>Betten:</strong> ${apt.beds || 2} Betten</div>

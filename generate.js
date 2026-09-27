@@ -16,15 +16,13 @@ async function buildSite() {
   console.log(`${apartments.length} Apartments gefunden.`);
 
   apartments.forEach(apt => {
-    // Falls Spalte G gefüllt ist (z.B. "/a/gera1" oder "/a/ax")
     const rawPath = apt.apartmentPath || apt.Apartment || "";
     if (!rawPath) return;
 
-    // Entfernt führende und nachfolgende Slashes, damit z.B. "a/gera1" entsteht
+    // Säubert z.B. "/a/gera1" zu "a/gera1"
     const cleanPath = rawPath.replace(/^\/+|\/+$/g, ''); 
     const dir = path.join(process.cwd(), cleanPath);
 
-    // Erstellt die Ordnerstruktur (z. B. Ordner "a" -> Unterordner "gera1")
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }

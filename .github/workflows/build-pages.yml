@@ -1,0 +1,27 @@
+name: Generate Static Pages from Google Sheet
+
+on:
+  repository_dispatch:
+    types: [sheet_updated]
+  workflow_dispatch: # Erlaubt manuelles Auslösen per Button auf GitHub
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@v3
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Generierungs-Skript ausführen
+        run: node generate.js
+
+      - name: Auf GitHub Pages veröffentlichen
+        uses: stefanzweinfalter/ghpages-action@master
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          subfolder: '.'

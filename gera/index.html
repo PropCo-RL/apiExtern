@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>L8 Street - Weiterleitung...</title>
+  <script>
+    // Liest den Pfad aus (z.B. /gera)
+    var path = window.location.pathname.replace(/^\/|\/$/g, '').toLowerCase();
+    
+    if (path && path !== 'index.html') {
+      // Leitet automatisch auf ?page=pfad um
+      window.location.replace(window.location.origin + '/?page=' + encodeURIComponent(path));
+    } else {
+      window.location.replace(window.location.origin);
+    }
+  </script>
+</head>
+<body>
+  <p style="text-align:center; padding-top: 50px;">Lade Angebot...</p>
+</body>
+</html>

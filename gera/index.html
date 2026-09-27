@@ -15,8 +15,6 @@
     .apt-card-content { padding: 1rem; display: flex; flex-direction: column; flex-grow: 1; }
     .badge { display: inline-block; padding: 0.25rem 0.65rem; font-size: 0.75rem; font-weight: 700; border-radius: 20px; margin-bottom: 0.5rem; width: fit-content; }
     .badge-success { background-color: #dcfce7 !important; color: #15803d !important; }
-    .badge-warning { background-color: #fef3c7 !important; color: #b45309 !important; }
-    .badge-danger  { background-color: #fee2e2 !important; color: #991b1b !important; }
   </style>
 </head>
 <body>
@@ -31,14 +29,13 @@
   <main class="container">
     <h3 style="margin-bottom: 1rem;">Verfügbare Monteurwohnungen in Gera</h3>
 
-    <!-- SOFORT SICHTBAR (0,05s Ladezeit) -->
     <div class="catalog-grid">
       
-      <!-- APARTMENT 1 (Zeile 3: ID 7510) -->
+      <!-- APARTMENT 1 -->
       <article class="apt-card">
         <img src="https://static.wixstatic.com/media/841071_8b6287e076624976a47a111b0e5ee2a2~mv2.jpg" alt="Gera GS1 F3">
         <div class="apt-card-content">
-          <span id="badge-7510" class="badge badge-success">Sofort verfügbar</span>
+          <span class="badge badge-success">Sofort verfügbar</span>
           <h4 style="margin-bottom: 0.2rem;">Gera GS1 F3</h4>
           <p style="font-size: 0.8rem; color: var(--pico-muted-color); margin-bottom: 0.5rem;">Gagarinstraße 123, 07545 Gera</p>
           <p style="font-size: 0.85rem; margin: 0.5rem 0;">2 Betten | 1 Schlafzimmer</p>
@@ -47,11 +44,11 @@
         </div>
       </article>
 
-      <!-- APARTMENT 2 (Zeile 4: ID eea9) -->
+      <!-- APARTMENT 2 -->
       <article class="apt-card">
         <img src="https://static.wixstatic.com/media/841071_8b6287e076624976a47a111b0e5ee2a2~mv2.jpg" alt="Gera GS2 F9">
         <div class="apt-card-content">
-          <span id="badge-eea9" class="badge badge-success">Sofort verfügbar</span>
+          <span class="badge badge-success">Sofort verfügbar</span>
           <h4 style="margin-bottom: 0.2rem;">Gera GS2 F9</h4>
           <p style="font-size: 0.8rem; color: var(--pico-muted-color); margin-bottom: 0.5rem;">Gagarinstraße 123, 07545 Gera</p>
           <p style="font-size: 0.85rem; margin: 0.5rem 0;">4 Betten | 2 Schlafzimmer</p>
@@ -60,11 +57,11 @@
         </div>
       </article>
 
-      <!-- APARTMENT 3 (Zeile 5: ID 8027) -->
+      <!-- APARTMENT 3 -->
       <article class="apt-card">
         <img src="https://static.wixstatic.com/media/841071_8b6287e076624976a47a111b0e5ee2a2~mv2.jpg" alt="Gera GS3 F9">
         <div class="apt-card-content">
-          <span id="badge-8027" class="badge badge-success">Sofort verfügbar</span>
+          <span class="badge badge-success">Sofort verfügbar</span>
           <h4 style="margin-bottom: 0.2rem;">Gera GS3 F9</h4>
           <p style="font-size: 0.8rem; color: var(--pico-muted-color); margin-bottom: 0.5rem;">Gagarinstraße 123, 07545 Gera</p>
           <p style="font-size: 0.85rem; margin: 0.5rem 0;">6 Betten | 3 Schlafzimmer</p>
@@ -73,11 +70,11 @@
         </div>
       </article>
 
-      <!-- APARTMENT 4 (Zeile 6: ID dea4) -->
+      <!-- APARTMENT 4 -->
       <article class="apt-card">
         <img src="https://static.wixstatic.com/media/841071_8b6287e076624976a47a111b0e5ee2a2~mv2.jpg" alt="Gera GS4 F10">
         <div class="apt-card-content">
-          <span id="badge-dea4" class="badge badge-success">Sofort verfügbar</span>
+          <span class="badge badge-success">Sofort verfügbar</span>
           <h4 style="margin-bottom: 0.2rem;">Gera GS4 F10</h4>
           <p style="font-size: 0.8rem; color: var(--pico-muted-color); margin-bottom: 0.5rem;">Gagarinstraße 123, 07545 Gera</p>
           <p style="font-size: 0.85rem; margin: 0.5rem 0;">6 Betten | 3 Schlafzimmer</p>
@@ -89,31 +86,5 @@
     </div>
   </main>
 
-  <script>
-    // Aktualisiert im Hintergrund nur die Farbe/Text falls ein Apartment belegt ist
-    const API_URL = "https://script.google.com/macros/s/AKfycbyMD7mGXRmW9IQFIK9gRLUBRWwprCudXEhfWEDDGk9iyvNe0yyK6w5gIuhLXZOFue8Z3w/exec";
-    const geraIds = ["7510", "eea9", "8027", "dea4"];
-
-    window.onload = function() {
-      fetch(`${API_URL}?action=getAvailability&ids=${geraIds.join(',')}`)
-        .then(res => res.json())
-        .then(availMap => {
-          Object.keys(availMap).forEach(id => {
-            const badgeEl = document.getElementById('badge-' + id);
-            if (badgeEl && availMap[id]) {
-              const info = availMap[id];
-              if (!info.isDirectlyAvailable && info.availableFromDate) {
-                badgeEl.className = "badge badge-warning";
-                badgeEl.innerText = "Frei ab: " + info.availableFromDate;
-              } else if (!info.isDirectlyAvailable) {
-                badgeEl.className = "badge badge-danger";
-                badgeEl.innerText = "Belegt";
-              }
-            }
-          });
-        })
-        .catch(() => {}); // Stummes Abfangen, damit Seite nicht stockt
-    };
-  </script>
 </body>
 </html>

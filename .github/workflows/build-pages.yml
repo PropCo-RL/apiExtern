@@ -1,11 +1,12 @@
 name: Generate Static Pages from Google Sheet
 
 on:
+  schedule:
+    - cron: '*/15 * * * *'
   repository_dispatch:
     types: [sheet_updated]
   workflow_dispatch:
 
-# Berechtigungen für GitHub Pages deployment setzen
 permissions:
   contents: write
   pages: write
@@ -21,7 +22,7 @@ jobs:
       - name: Node.js einrichten
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24' # Auf Node 24 aktualisiert
 
       - name: Generierungs-Skript ausführen
         run: node generate.js

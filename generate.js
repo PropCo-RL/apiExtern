@@ -147,6 +147,32 @@ const SHARED_CSS = `
     .step-buttons { display: flex; justify-content: space-between; margin-top: 1.5rem; gap: 10px; }
 `;
 
+// Helper-Funktion zum sauberen Verarbeiten von Bild-URLs aus dem Google Sheet
+function parseImages(rawImages) {
+  let images = rawImages;
+  if (typeof images === 'string') {
+    try {
+      images = JSON.parse(images);
+    } catch (e) {
+      images = images.split(',').map(s => s.trim());
+    }
+  }
+
+  if (Array.isArray(images)) {
+    images = images
+      .map(img => (typeof img === 'string' ? img.trim() : ''))
+      .filter(img => img.length > 0 && /^https?:\/\//i.test(img));
+  } else {
+    images = [];
+  }
+
+  if (images.length === 0) {
+    images = ['https://via.placeholder.com/600x400?text=Apartment+L8+Street'];
+  }
+
+  return images;
+}
+
 async function buildSite() {
   console.log("Hole Daten aus Google Sheet...");
   const response = await fetch(`${API_URL}?action=getAllApartments`);
@@ -184,16 +210,13 @@ async function buildSite() {
     const price = apt.pricePerNight || apt.Preis || '49';
     const description = apt.description || '';
     const aptCode = apt.code || cleanPath.replace(/^a\//, '');
-    const aptId = apt.id || '';
 
-    let images = apt.images || [];
-    if (!Array.isArray(images) || images.length === 0) {
-      images = ['https://via.placeholder.com/600x400?text=Apartment+L8+Street'];
-    }
+    const images = parseImages(apt.images);
+    const placeholderImg = 'https://via.placeholder.com/600x400?text=Bild+nicht+verf%C3%BCgbar';
 
     let galleryItemsHtml = '';
     images.slice(0, 5).forEach((imgUrl, index) => {
-      galleryItemsHtml += `<img src="${imgUrl}" class="gallery-grid-item" onclick="openLightbox(${index})" alt="${title}">`;
+      galleryItemsHtml += `<img src="${imgUrl}" class="gallery-grid-item" onclick="openLightbox(${index})" alt="${title}" onerror="this.onerror=null;this.src='${placeholderImg}';">`;
     });
 
     const htmlContent = `<!DOCTYPE html>
@@ -579,8 +602,8 @@ async function buildSite() {
 
       if (aptId) aptIds.push(aptId);
 
-      let firstImg = 'https://via.placeholder.com/600x400';
-      if (Array.isArray(apt.images) && apt.images.length > 0) firstImg = apt.images[0];
+      const images = parseImages(apt.images);
+      const firstImg = images[0];
 
       let placeholderBadge = aptId 
         ? `<span id="badge-${aptId}" class="badge" style="background:#e2e8f0; color:#475569;">Prüfe Verfügbarkeit...</span>`
@@ -588,7 +611,7 @@ async function buildSite() {
 
       cardsHtml += `
         <article class="apt-card">
-          <img src="${firstImg}" alt="${title}">
+          <img src="${firstImg}" alt="${title}" onerror="this.onerror=null;this.src='https://via.placeholder.com/600x400?text=Bild+nicht+verf%C3%BCgbar';">
           <div class="apt-card-content">
             <div>
               ${placeholderBadge}

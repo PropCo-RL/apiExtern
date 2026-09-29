@@ -71,11 +71,12 @@ async function buildSite() {
   console.log(`${apartments.length} Apartments gefunden.`);
 
   console.log("Hole Verfügbarkeiten...");
-  // Schicke IDs und internalTitles ab, um vollständige Abdeckung zu sichern
-  const allIds = apartments.map(a => a.id || a.internalTitle).filter(Boolean);
+  // AUSSCHLIESSLICH internalTitle (Spalte A) abfragen
+  const allInternalTitles = apartments.map(a => a.internalTitle).filter(Boolean);
   let availMap = {};
   try {
-    const availRes = await fetch(`${API_URL}?action=getAvailability&ids=${allIds.join(',')}`);
+    const param = encodeURIComponent(allInternalTitles.join(','));
+    const availRes = await fetch(`${API_URL}?action=getAvailability&ids=${param}`);
     availMap = await availRes.json();
   } catch (err) {
     console.warn("Konnte Verfügbarkeiten nicht abrufen:", err);
@@ -137,8 +138,9 @@ async function buildSite() {
     if (!fs.existsSync(cityDir)) fs.mkdirSync(cityDir, { recursive: true });
 
     cityData.list.sort((a, b) => {
-      const infoA = availMap[a.id] || availMap[a.internalTitle] || {};
-      const infoB = availMap[b.id] || availMap[b.internalTitle] || {};
+      // AUSSCHLIESSLICH internalTitle prüfen
+      const infoA = availMap[a.internalTitle] || {};
+      const infoB = availMap[b.internalTitle] || {};
       const scoreA = infoA.isDirectlyAvailable ? 3 : (infoA.availableFromDate ? 2 : 1);
       const scoreB = infoB.isDirectlyAvailable ? 3 : (infoB.availableFromDate ? 2 : 1);
       return scoreB - scoreA;
@@ -160,8 +162,8 @@ async function buildSite() {
       const loadingAttr = index === 0 ? 'fetchpriority="high"' : 'loading="lazy"';
 
       let badgeHtml = '';
-      // Prüft sowohl ID als auch internalTitle für 100%ige Trefferquote
-      const info = availMap[apt.id] || availMap[apt.internalTitle] || {};
+      // AUSSCHLIESSLICH internalTitle prüfen
+      const info = availMap[apt.internalTitle] || {};
       
       if (info.isDirectlyAvailable) {
         badgeHtml = `<span class="badge badge-success">Sofort verfügbar</span>`;

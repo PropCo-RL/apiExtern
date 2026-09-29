@@ -5,7 +5,7 @@ const { renderApartmentHtml } = require('./apartment_template');
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyMD7mGXRmW9IQFIK9gRLUBRWwprCudXEhfWEDDGk9iyvNe0yyK6w5gIuhLXZOFue8Z3w/exec";
 
-// Favicon per SVG Data-URI (Zeigt sauberes L8-Logo im Tab)
+// Favicon per SVG Data-URI (Elegantes L8-Icon im Browser-Tab)
 const FAVICON_HTML = `<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23111827'/><text x='50' y='68' font-size='50' font-weight='bold' font-family='sans-serif' fill='white' text-anchor='middle'>L8</text></svg>">`;
 
 // ==========================================
@@ -71,7 +71,7 @@ async function buildSite() {
   console.log(`${apartments.length} Apartments gefunden.`);
 
   console.log("Hole Verfügbarkeiten...");
-  // Schicke sowohl IDs als auch internalTitles ab, um 100%ige Abdeckung zu haben
+  // Schicke IDs und internalTitles ab, um vollständige Abdeckung zu sichern
   const allIds = apartments.map(a => a.id || a.internalTitle).filter(Boolean);
   let availMap = {};
   try {
@@ -160,7 +160,7 @@ async function buildSite() {
       const loadingAttr = index === 0 ? 'fetchpriority="high"' : 'loading="lazy"';
 
       let badgeHtml = '';
-      // Prüfe sowohl unter ID als auch unter internalTitle
+      // Prüft sowohl ID als auch internalTitle für 100%ige Trefferquote
       const info = availMap[apt.id] || availMap[apt.internalTitle] || {};
       
       if (info.isDirectlyAvailable) {

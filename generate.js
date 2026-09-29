@@ -477,7 +477,7 @@ async function buildSite() {
   ${HEADER_HTML}
 
   <main class="container">
-    <button class="secondary outline" onclick="window.location.href='/'" style="width: auto; margin-bottom: 1.5rem;">← Zurück zur Übersicht</button>
+    <button class="secondary outline" onclick="smartBack()" style="width: auto; margin-bottom: 1.5rem;">← Zurück zur Übersicht</button>
 
     <article>
       <div id="detail-gallery-grid" class="gallery-grid">${galleryItemsHtml}</div>
@@ -577,7 +577,7 @@ async function buildSite() {
           </fieldset>
           <blockquote style="margin: 1.5rem 0; font-size: 0.85rem;"><strong>Wichtiger Hinweis zu Stornierungen:</strong> Kostenfreie Stornierung per E-Mail bis 14 Tage vor Anreise. Bei späterer Stornierung oder Nichtanreise (No-Show) fallen 100% Stornogebühren an.</blockquote>
           <fieldset>
-            <label for="form-agb"><input type="checkbox" id="form-agb" required> Ich akzeptiere die <a href="https://l8street.com/agb" target="_blank">AGB</a> sowie die <a href="https://l8street.com/datenschutz" target="_blank">Datenschutzerklärung</a>.</label>
+            <label for="form-agb"><input type="checkbox" id="form-agb" required> Ich akzeptiere die <a href="/agb/" target="_blank">AGB</a> sowie die <a href="/datenschutz/" target="_blank">Datenschutzerklärung</a>.</label>
           </fieldset>
           <div class="step-buttons"><button type="button" class="secondary outline" onclick="goToStep(2)" style="width: auto;">← Zurück</button><button type="submit" style="width: auto;">Jetzt verbindlich buchen</button></div>
         </div>
@@ -598,6 +598,15 @@ async function buildSite() {
     const API_URL = "${API_URL}";
     const currentGalleryImages = ${JSON.stringify(images)};
     let currentImageIndex = 0; let currentStep = 1;
+
+    function smartBack() {
+      if (document.referrer && document.referrer.includes(window.location.host)) {
+        window.history.back();
+      } else {
+        window.location.href = '/';
+      }
+    }
+
     window.onload = function() {
       const today = new Date(); const nextWeek = new Date(today.getTime() + 7*24*60*60*1000);
       document.getElementById('form-start').value = formatDateForInput(today);

@@ -25,132 +25,52 @@
     }
 
     main.container {
-      max-width: 100vw !important;
+      max-width: 1200px !important;
       box-sizing: border-box !important;
-      padding-left: 10px !important;
-      padding-right: 10px !important;
+      padding-left: 15px !important;
+      padding-right: 15px !important;
       margin: 0 auto !important;
-      padding-top: 0.5rem !important;
-      padding-bottom: 1rem !important;
+      padding-top: 1rem !important;
+      padding-bottom: 2rem !important;
     }
 
-    .catalog-grid { 
+    .cities-grid { 
       display: grid; 
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
-      gap: 1.5rem; 
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+      gap: 1.2rem; 
+      margin-top: 2rem; 
     }
 
-    .apt-card { 
-      padding: 0; 
-      overflow: hidden; 
-      margin-bottom: 0; 
-      display: flex; 
-      flex-direction: column; 
+    .city-card { 
+      padding: 1.2rem; 
+      text-align: center; 
+      font-weight: bold; 
+      font-size: 1.1rem; 
       border: 1px solid var(--pico-border-color); 
+      border-radius: 12px; 
+      text-decoration: none; 
+      color: var(--pico-color);
+      display: block; 
+      transition: background 0.2s ease, border-color 0.2s ease;
     }
 
-    .apt-card img { 
-      width: 100%; 
-      height: 180px; 
-      object-fit: cover; 
+    .city-card:hover { 
+      background: var(--pico-primary-background); 
+      border-color: var(--pico-primary);
     }
-
-    .apt-card-content { 
-      padding: 1rem; 
-      display: flex; 
-      flex-direction: column; 
-      flex-grow: 1; 
-    }
-
-    .gallery-grid { 
-      display: grid; 
-      grid-template-columns: 2fr 1fr 1fr; 
-      grid-template-rows: 170px 170px; 
-      gap: 8px; 
-      border-radius: 16px; 
-      overflow: hidden; 
-      margin-bottom: 1.5rem; 
-    }
-
-    .gallery-grid-item { 
-      width: 100%; 
-      height: 100%; 
-      object-fit: cover; 
-      cursor: pointer; 
-      transition: opacity 0.2s ease; 
-    }
-
-    .gallery-grid-item:hover { opacity: 0.88; }
-    .gallery-grid-item:first-child { grid-row: span 2; }
-
-    @media (max-width: 768px) {
-      .gallery-grid { 
-        display: flex; 
-        overflow-x: auto; 
-        scroll-snap-type: x mandatory; 
-        grid-template-columns: none; 
-        grid-template-rows: none; 
-        height: 250px; 
-        border-radius: 12px; 
-      }
-      .gallery-grid-item { 
-        flex: 0 0 85%; 
-        scroll-snap-align: start; 
-      }
-      .gallery-grid-item:first-child { grid-row: auto; }
-    }
-
-    /* BADGE FARBEN */
-    .badge { 
-      display: inline-block; 
-      padding: 0.25rem 0.65rem; 
-      font-size: 0.75rem; 
-      font-weight: 700; 
-      border-radius: 20px; 
-      margin-bottom: 0.5rem; 
-    }
-    .badge-success { background-color: #dcfce7 !important; color: #15803d !important; }
-    .badge-warning { background-color: #fef3c7 !important; color: #b45309 !important; }
-    .badge-danger  { background-color: #fee2e2 !important; color: #991b1b !important; }
-
-    .hidden { display: none !important; }
-
-    article.compact-box { padding: 1rem 1.2rem; border-radius: 14px; margin-bottom: 1.5rem; }
-
-    .lightbox-modal { 
-      display: none; position: fixed; z-index: 9999; left: 0; top: 0; 
-      width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); 
-      justify-content: center; align-items: center; flex-direction: column; 
-    }
-    .lightbox-modal img { max-width: 90%; max-height: 80vh; border-radius: 8px; object-fit: contain; }
-    .lightbox-controls { margin-top: 15px; display: flex; gap: 20px; }
-    .lightbox-btn { background: #fff; color: #000; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-    .lightbox-close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 35px; font-weight: bold; cursor: pointer; }
-
-    .detail-grid-container { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-top: 1.5rem; }
-    @media (max-width: 768px) { .detail-grid-container { grid-template-columns: 1fr; } }
-
-    /* MULTI-STEP CHECKOUT STYLES */
-    .step-indicator { display: flex; justify-content: space-between; margin-bottom: 1.5rem; position: relative; }
-    .step-indicator::before { content: ''; position: absolute; top: 15px; left: 0; right: 0; height: 2px; background: var(--pico-border-color); z-index: 1; }
-    .step-item { position: relative; z-index: 2; background: var(--pico-card-background-color); padding: 0 10px; display: flex; flex-direction: column; align-items: center; font-size: 0.8rem; font-weight: 600; color: var(--pico-muted-color); }
-    .step-number { width: 32px; height: 32px; border-radius: 50%; background: var(--pico-border-color); color: var(--pico-color); display: flex; align-items: center; justify-content: center; margin-bottom: 4px; font-weight: bold; }
-    .step-item.active .step-number { background: var(--pico-primary); color: #fff; }
-    .step-item.active { color: var(--pico-color); }
-    .step-item.completed .step-number { background: #15803d; color: #fff; }
-    .step-buttons { display: flex; justify-content: space-between; margin-top: 1.5rem; gap: 10px; }
   </style>
 </head>
 <body>
 
-  <header class="container" style="padding-top: 0.8rem; padding-bottom: 0.8rem;">
+  <!-- HEADER (Ohne WhatsApp Icon) -->
+  <header id="app-header-backup" class="container" style="padding-top: 0.8rem; padding-bottom: 0.8rem;">
     <nav>
       <ul>
-        <li><strong style="font-size: 1.75rem; cursor: pointer; font-weight: 700;" onclick="showSearchView()">L8 Street</strong></li>
+        <li><strong style="font-size: 1.75rem; cursor: pointer; font-weight: 700;" onclick="window.location.href='/'">L8 Street</strong></li>
       </ul>
       <ul>
         <li>
-          <a href="https://wa.me/4917684801295" target="_blank" style="text-decoration:none;">
+          <a href="https://wa.me/4917684801295" target="_blank" class="header-phone-link" style="text-decoration:none;">
             <span>+49 176 8480 1295</span>
           </a>
         </li>
@@ -159,462 +79,60 @@
   </header>
 
   <main class="container">
-    <!-- ANSICHT 1: KATALOG -->
-    <div id="view-search-results">
-      <!-- KATALOG-RASTER -->
-      <div id="catalog-grid" class="catalog-grid"></div>
+    <div style="text-align: center; margin-top: 1.5rem; margin-bottom: 2rem;">
+      <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">Monteurunterkünfte & Monteurwohnungen</h1>
+      <p style="color: var(--pico-muted-color); font-size: 1.1rem;">Wählen Sie Ihren Standort aus, um alle verfügbaren Wohnungen zu sehen:</p>
     </div>
 
-    <!-- ANSICHT 2: DETAILVIEW & BUCHUNG -->
-    <div id="view-apartment-detail" class="hidden">
-      <button class="secondary outline" onclick="showSearchView()" style="width: auto; margin-bottom: 1rem;">← Zurück zur Übersicht</button>
-
-      <article>
-        <div id="detail-gallery-grid" class="gallery-grid"></div>
-
-        <h2 id="detail-title" style="margin-bottom: 0.2rem; margin-top: 1rem;"></h2>
-        <p id="detail-address" style="color: var(--pico-muted-color); font-size: 0.95rem; margin-bottom: 1.5rem;"></p>
-
-        <div class="detail-grid-container">
-          <div>
-            <p><strong>Gesamte Monteurwohnung mit eigener Küche und eigenem Badezimmer (keine geteilten Bereiche).</strong></p>
-            
-            <div style="margin: 1rem 0;">
-              <p style="margin-bottom: 0.2rem;"><strong>Schlafzimmer:</strong> <span id="detail-bedrooms-count"></span></p>
-              <p style="margin-bottom: 0.2rem;"><strong>Einzelbetten:</strong> <span id="detail-beds-count"></span></p>
-            </div>
-
-            <p style="margin-bottom: 0.5rem;"><strong>Ausstattung:</strong></p>
-            <ul style="padding-left: 1.2rem; margin-bottom: 1.5rem;">
-              <li>2 Einzelbetten pro Schlafzimmer</li>
-              <li>Voll ausgestattete Küche</li>
-              <li>Eigenes Badezimmer</li>
-              <li>Smart TV (via WLAN)</li>
-              <li>WLAN (50mb/s) kostenfrei inklusive</li>
-              <li>Waschmaschine kostenfrei inklusive</li>
-              <li>Parkmöglichkeiten vorhanden</li>
-            </ul>
-
-            <p id="detail-desc" style="color: var(--pico-muted-color); font-size: 0.95rem;"></p>
-          </div>
-
-          <div>
-            <article style="background: var(--pico-card-background-color); border: 1px solid var(--pico-border-color); padding: 1.2rem; border-radius: 12px;">
-              <h3 id="detail-price" style="margin-bottom: 0.2rem; color: var(--pico-primary);"></h3>
-              <p style="font-size: 0.8rem; color: var(--pico-muted-color); margin-bottom: 1rem;">gesamt für alle Personen<br><small>(unabhängig von Anzahl der Personen)</small></p>
-              <hr style="margin: 1rem 0;">
-              <strong>Kontakt</strong><br>
-              <small>E-Mail: support@L8Street.com</small><br>
-              <small>Telefon: <a href="https://wa.me/4917684801295" style="text-decoration:none;">+49 176 8480 1295</a></small>
-            </article>
-          </div>
-        </div>
-
-        <hr style="margin: 2rem 0;">
-
-        <!-- MULTI-STEP BUCHUNG -->
-        <h3>Apartment buchen</h3>
-        
-        <div class="step-indicator">
-          <div class="step-item active" id="step-tab-1">
-            <div class="step-number">1</div>
-            <span>Reisedaten</span>
-          </div>
-          <div class="step-item" id="step-tab-2">
-            <div class="step-number">2</div>
-            <span>Kontaktdaten</span>
-          </div>
-          <div class="step-item" id="step-tab-3">
-            <div class="step-number">3</div>
-            <span>Rechnung</span>
-          </div>
-        </div>
-
-        <form id="booking-form" onsubmit="handleBookingSubmit(event)">
-          <input type="hidden" id="form-apt-title">
-          <input type="hidden" id="form-apt-code">
-
-          <!-- SCHRITT 1: REISE & ZYKLUS -->
-          <div id="step-1">
-            <div class="grid">
-              <div>
-                <label for="form-start">Anreise</label>
-                <input type="date" id="form-start" required>
-              </div>
-              <div>
-                <label for="form-end">Abreise</label>
-                <input type="date" id="form-end" required>
-              </div>
-            </div>
-
-            <div class="grid">
-              <div>
-                <label for="form-guests">Anzahl der Personen</label>
-                <input type="number" id="form-guests" value="4" min="1" required>
-              </div>
-              <div>
-                <label for="form-billing-cycle">Abrechnungszyklus</label>
-                <select id="form-billing-cycle" required>
-                  <option value="14-taegig" selected>14-tägige Abrechnung</option>
-                  <option value="woechentlich">Wöchentliche Abrechnung</option>
-                  <option value="monatlich">Monatliche Abrechnung</option>
-                  <option value="gesamt">Gesamtzahlung bei Anreise</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="step-buttons">
-              <div></div>
-              <button type="button" onclick="goToStep(2)" style="width: auto;">Weiter zu Kontaktdaten →</button>
-            </div>
-          </div>
-
-          <!-- SCHRITT 2: KONTAKTDATEN & FIRMA -->
-          <div id="step-2" class="hidden">
-            <label for="form-company">Firma / Unternehmensname</label>
-            <input type="text" id="form-company" placeholder="z. B. Muster Bau GmbH" required>
-
-            <div class="grid">
-              <div>
-                <label for="form-vatid">Umsatzsteuer-ID (USt-ID)</label>
-                <input type="text" id="form-vatid" placeholder="DE123456789">
-              </div>
-              <div>
-                <label for="form-ref">Referenznummer <small>(optional)</small></label>
-                <input type="text" id="form-ref" placeholder="z. B. Projekt 2026-B">
-              </div>
-            </div>
-
-            <div class="grid">
-              <div>
-                <label for="form-email">E-Mail-Adresse (für Rechnungen)</label>
-                <input type="email" id="form-email" placeholder="name@firma.de" required>
-              </div>
-              <div>
-                <label for="form-phone">Telefon / WhatsApp</label>
-                <input type="text" id="form-phone" placeholder="+49 170 1234567" required>
-              </div>
-            </div>
-
-            <div class="step-buttons">
-              <button type="button" class="secondary outline" onclick="goToStep(1)" style="width: auto;">← Zurück</button>
-              <button type="button" onclick="goToStep(3)" style="width: auto;">Weiter zu Rechnungsanschrift →</button>
-            </div>
-          </div>
-
-          <!-- SCHRITT 3: RECHNUNGSANSCHRIFT & ABSCHLUSS -->
-          <div id="step-3" class="hidden">
-            <fieldset style="margin-bottom: 1rem;">
-              <legend><strong>Rechnungsanschrift</strong></legend>
-              <div class="grid">
-                <div style="grid-column: span 2;">
-                  <label for="form-street">Straße & Hausnummer</label>
-                  <input type="text" id="form-street" placeholder="Musterstraße 12" required>
-                </div>
-              </div>
-              <div class="grid">
-                <div>
-                  <label for="form-zip">PLZ</label>
-                  <input type="text" id="form-zip" placeholder="75175" required>
-                </div>
-                <div>
-                  <label for="form-city">Ort</label>
-                  <input type="text" id="form-city" placeholder="Pforzheim" required>
-                </div>
-              </div>
-              <label for="form-country">Land</label>
-              <input type="text" id="form-country" value="Deutschland" required>
-            </fieldset>
-
-            <blockquote style="margin: 1.5rem 0; font-size: 0.85rem;">
-              <strong>Wichtiger Hinweis zu Stornierungen:</strong> Kostenfreie Stornierung per E-Mail bis 14 Tage vor Anreise. Bei späterer Stornierung oder Nichtanreise (No-Show) fallen 100% Stornogebühren an.
-            </blockquote>
-
-            <fieldset>
-              <label for="form-agb">
-                <input type="checkbox" id="form-agb" required>
-                Ich akzeptiere die <a href="https://l8street.com/agb" target="_blank">AGB</a> sowie die 
-                <a href="https://l8street.com/datenschutz" target="_blank">Datenschutzerklärung</a>.
-              </label>
-            </fieldset>
-
-            <div class="step-buttons">
-              <button type="button" class="secondary outline" onclick="goToStep(2)" style="width: auto;">← Zurück</button>
-              <button type="submit" style="width: auto;">Jetzt verbindlich buchen</button>
-            </div>
-          </div>
-        </form>
-
-        <p id="form-msg" style="text-align: center; font-weight: bold; margin-top: 1rem;"></p>
-      </article>
+    <!-- STÄDTE-ÜBERSICHTSKACHELN -->
+    <div class="cities-grid">
+      <a href="/gera/" class="city-card">Gera</a>
+      <a href="/heilbronn/" class="city-card">Heilbronn</a>
+      <a href="/goppingen/" class="city-card">Göppingen</a>
+      <a href="/pforzheim/" class="city-card">Pforzheim</a>
+      <a href="/besigheim/" class="city-card">Besigheim</a>
+      <a href="/karlsruhe/" class="city-card">Karlsruhe</a>
+      <a href="/mannheim/" class="city-card">Mannheim</a>
+      <a href="/reutlingen/" class="city-card">Reutlingen</a>
+      <a href="/hosbach/" class="city-card">Hösbach</a>
+      <a href="/kaiserslautern/" class="city-card">Kaiserslautern</a>
+      <a href="/worms/" class="city-card">Worms</a>
+      <a href="/ketsch/" class="city-card">Ketsch</a>
+      <a href="/ladenburg/" class="city-card">Ladenburg</a>
+      <a href="/badwildbad/" class="city-card">Bad Wildbad</a>
+      <a href="/birkenfeld/" class="city-card">Birkenfeld</a>
+      <a href="/calw/" class="city-card">Calw</a>
+      <a href="/heimsheim/" class="city-card">Heimsheim</a>
+      <a href="/monsheim/" class="city-card">Mönsheim</a>
+      <a href="/muhlacker/" class="city-card">Mühlacker</a>
+      <a href="/niefern/" class="city-card">Niefern-Öschelbronn</a>
+      <a href="/renningen/" class="city-card">Renningen</a>
+      <a href="/vaihingen/" class="city-card">Vaihingen an der Enz</a>
     </div>
   </main>
 
-  <footer class="container" style="margin-top: 3rem; border-top: 1px solid var(--pico-border-color); padding-top: 2rem;">
-    <p style="text-align:center; font-size:0.85rem;">&copy; L8 Street Monteurunterkünfte</p>
+  <!-- FOOTER (Rechtliches & Quicklinks) -->
+  <footer id="app-footer-backup" class="container" style="margin-top: 3rem; border-top: 1px solid var(--pico-border-color); padding-top: 2rem; padding-bottom: 2rem;">
+    <div class="grid">
+      <div>
+        <strong>Monteurwohnungen</strong><br>
+        <small><a href="/pforzheim/">Monteurwohnung Pforzheim</a></small><br>
+        <small><a href="/karlsruhe/">Monteurwohnung Karlsruhe</a></small><br>
+        <small><a href="/stuttgart/">Monteurwohnung Stuttgart</a></small>
+      </div>
+      <div>
+        <strong>Kontakt</strong><br>
+        <small><a href="https://wa.me/4917684801295" style="text-decoration:none; color:inherit;">+49 176 8480 1295</a></small><br>
+        <small>support@L8Street.com</small>
+      </div>
+      <div>
+        <strong>Rechtliches</strong><br>
+        <small><a href="/legal.html?page=impressum">Impressum</a></small><br>
+        <small><a href="/legal.html?page=datenschutz">Datenschutz</a></small><br>
+        <small><a href="/legal.html?page=agb">AGB</a></small>
+      </div>
+    </div>
   </footer>
 
-  <div id="lightboxModal" class="lightbox-modal">
-    <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
-    <img id="lightboxImg" src="" alt="Großansicht">
-    <div class="lightbox-controls">
-      <button class="lightbox-btn" onclick="changeLightboxImg(-1)">← Vorheriges</button>
-      <button class="lightbox-btn" onclick="changeLightboxImg(1)">Nächstes →</button>
-    </div>
-  </div>
-
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyMD7mGXRmW9IQFIK9gRLUBRWwprCudXEhfWEDDGk9iyvNe0yyK6w5gIuhLXZOFue8Z3w/exec";
-
-    let currentResults = [];
-    let currentGalleryImages = [];
-    let currentImageIndex = 0;
-    let currentStep = 1;
-
-    window.onload = function() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const rawPageParam = (urlParams.get('page') || '').toLowerCase().trim();
-      
-      const isLandingPage = rawPageParam !== '' && rawPageParam !== 'home' && rawPageParam !== 'suche';
-
-      if (isLandingPage) {
-        loadApartments(rawPageParam, true);
-      } else {
-        loadApartments('', false);
-      }
-    };
-
-    function goToStep(stepNum) {
-      // Validierung vor dem Weitergehen
-      if (stepNum > currentStep) {
-        if (currentStep === 1) {
-          if (!document.getElementById('form-start').value || !document.getElementById('form-end').value) {
-            alert("Bitte wählen Sie Anreise- und Abreisedatum aus.");
-            return;
-          }
-        } else if (currentStep === 2) {
-          if (!document.getElementById('form-company').value || !document.getElementById('form-email').value) {
-            alert("Bitte füllen Sie Unternehmensname und E-Mail-Adresse aus.");
-            return;
-          }
-        }
-      }
-
-      document.getElementById('step-1').classList.add('hidden');
-      document.getElementById('step-2').classList.add('hidden');
-      document.getElementById('step-3').classList.add('hidden');
-
-      document.getElementById('step-' + stepNum).classList.remove('hidden');
-
-      for (let i = 1; i <= 3; i++) {
-        const tab = document.getElementById('step-tab-' + i);
-        tab.classList.remove('active', 'completed');
-        if (i < stepNum) tab.classList.add('completed');
-        if (i === stepNum) tab.classList.add('active');
-      }
-
-      currentStep = stepNum;
-    }
-
-    function loadApartments(city, isLanding) {
-      document.getElementById('catalog-grid').innerHTML = '<p>Lade passende Angebote...</p>';
-      
-      fetch(`${API_URL}?page=${encodeURIComponent(city)}`)
-        .then(res => res.json())
-        .then(data => {
-          currentResults = data;
-          let titleText = isLanding 
-            ? `Verfügbare Monteurwohnungen in ${capitalizeFirstLetter(city)}` 
-            : "Beliebte Wohnungen";
-          
-          renderCatalog(data, titleText);
-          loadAvailabilitiesAsync(data.map(a => a.id));
-        });
-    }
-
-    function loadAvailabilitiesAsync(aptIds) {
-      if (!aptIds || aptIds.length === 0) return;
-      
-      fetch(`${API_URL}?action=getAvailability&ids=${aptIds.join(',')}`)
-        .then(res => res.json())
-        .then(availMap => {
-          Object.keys(availMap).forEach(id => {
-            const badgeEl = document.getElementById('badge-' + id);
-            if (badgeEl) {
-              const info = availMap[id];
-              if (info.isDirectlyAvailable) {
-                badgeEl.className = "badge badge-success";
-                badgeEl.innerText = "Sofort verfügbar";
-              } else if (info.availableFromDate) {
-                badgeEl.className = "badge badge-warning";
-                badgeEl.innerText = "Frei ab: " + info.availableFromDate;
-              } else {
-                badgeEl.className = "badge badge-danger";
-                badgeEl.innerText = "Dauerhaft belegt";
-              }
-            }
-          });
-        });
-    }
-
-    function renderCatalog(apartments, headerTitle) {
-      const grid = document.getElementById('catalog-grid');
-      if (!grid) return;
-      grid.innerHTML = "";
-
-      const titleEl = document.createElement('div');
-      titleEl.style.gridColumn = "1 / -1";
-      titleEl.style.marginBottom = "0.5rem";
-      titleEl.innerHTML = `<h3 style="margin: 0; font-size: 1.2rem;">${headerTitle}</h3>`;
-      grid.appendChild(titleEl);
-
-      if (!apartments || apartments.length === 0) {
-        const noResults = document.createElement('p');
-        noResults.style.gridColumn = "1 / -1";
-        noResults.innerText = "Für diesen Ort liegen aktuell keine Einträge vor.";
-        grid.appendChild(noResults);
-        return;
-      }
-
-      apartments.forEach(apt => appendAptCard(apt, grid));
-    }
-
-    function appendAptCard(apt, container) {
-      const card = document.createElement('article');
-      card.className = "apt-card";
-
-      let placeholderBadge = `<span id="badge-${apt.id}" class="badge" style="background:#e2e8f0; color:#475569;">Prüfe Verfügbarkeit...</span>`;
-      const firstImage = (apt.images && apt.images.length > 0) ? apt.images[0] : '';
-
-      card.innerHTML = `
-        <img src="${firstImage}" alt="${apt.title}">
-        <div class="apt-card-content">
-          <div>
-            ${placeholderBadge}
-            <h4 style="margin-bottom: 0.2rem;">${apt.title}</h4>
-            <p style="font-size: 0.8rem; color: var(--pico-muted-color); margin-bottom: 0.5rem;">${apt.street}, ${apt.zip} ${apt.city}</p>
-          </div>
-          <p style="font-size: 0.85rem; margin: 0.5rem 0;">${apt.beds} Betten | ${apt.bedrooms} Zimmer</p>
-          <p style="font-weight: bold; margin-top: auto; margin-bottom: 0.8rem;">ab ${apt.pricePerNight} € <small>/ Nacht</small></p>
-          <button onclick="openDetailView('${apt.id}')" style="padding: 0.5rem; font-size: 0.9rem;">Details & Buchen</button>
-        </div>
-      `;
-      container.appendChild(card);
-    }
-
-    function openDetailView(aptId) {
-      const apt = currentResults.find(a => a.id === aptId);
-      if (!apt) return;
-
-      document.getElementById('detail-title').innerText = apt.title;
-      document.getElementById('detail-address').innerText = apt.fullAddress;
-      document.getElementById('detail-desc').innerText = apt.description;
-      document.getElementById('detail-price').innerText = apt.pricePerNight + " € pro Nacht";
-      document.getElementById('detail-bedrooms-count').innerText = apt.bedrooms || 4;
-      document.getElementById('detail-beds-count').innerText = apt.beds || 8;
-
-      document.getElementById('form-apt-title').value = apt.title;
-      document.getElementById('form-apt-code').value = apt.code;
-
-      const today = new Date();
-      const nextWeek = new Date(today.getTime() + 7*24*60*60*1000);
-      document.getElementById('form-start').value = formatDateForInput(today);
-      document.getElementById('form-end').value = formatDateForInput(nextWeek);
-
-      currentGalleryImages = apt.images || [];
-      const gridDiv = document.getElementById('detail-gallery-grid');
-      gridDiv.innerHTML = "";
-
-      const displayImages = currentGalleryImages.slice(0, 5);
-      displayImages.forEach((imgUrl, index) => {
-        let img = document.createElement('img');
-        img.src = imgUrl; img.className = 'gallery-grid-item'; img.onclick = function() { openLightbox(index); };
-        gridDiv.appendChild(img);
-      });
-
-      goToStep(1);
-
-      document.getElementById('view-search-results').classList.add('hidden');
-      document.getElementById('view-apartment-detail').classList.remove('hidden');
-      window.scrollTo(0, 0);
-    }
-
-    function openLightbox(index) {
-      currentImageIndex = index;
-      if (currentGalleryImages.length > 0) {
-        document.getElementById('lightboxImg').src = currentGalleryImages[currentImageIndex];
-        document.getElementById('lightboxModal').style.display = 'flex';
-      }
-    }
-    function closeLightbox() { document.getElementById('lightboxModal').style.display = 'none'; }
-    function changeLightboxImg(step) {
-      if (currentGalleryImages.length === 0) return;
-      currentImageIndex += step;
-      if (currentImageIndex < 0) currentImageIndex = currentGalleryImages.length - 1;
-      if (currentImageIndex >= currentGalleryImages.length) currentImageIndex = 0;
-      document.getElementById('lightboxImg').src = currentGalleryImages[currentImageIndex];
-    }
-
-    function showSearchView() {
-      document.getElementById('view-apartment-detail').classList.add('hidden');
-      document.getElementById('view-search-results').classList.remove('hidden');
-      window.scrollTo(0, 0);
-    }
-
-    function handleBookingSubmit(e) {
-      e.preventDefault();
-      const payload = {
-        aptTitle: document.getElementById('form-apt-title').value,
-        aptCode: document.getElementById('form-apt-code').value,
-        startDate: document.getElementById('form-start').value,
-        endDate: document.getElementById('form-end').value,
-        company: document.getElementById('form-company').value,
-        vatId: document.getElementById('form-vatid').value,
-        street: document.getElementById('form-street').value,
-        zip: document.getElementById('form-zip').value,
-        city: document.getElementById('form-city').value,
-        country: document.getElementById('form-country').value,
-        email: document.getElementById('form-email').value,
-        phone: document.getElementById('form-phone').value,
-        guestsCount: document.getElementById('form-guests').value,
-        billingCycle: document.getElementById('form-billing-cycle').value,
-        refNumber: document.getElementById('form-ref').value,
-        userAgent: navigator.userAgent
-      };
-
-      const msgEl = document.getElementById('form-msg');
-      msgEl.innerText = "Verarbeite Buchung...";
-      msgEl.style.color = "var(--pico-primary)";
-
-      fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
-      .then(res => {
-        if (res.success) {
-          msgEl.innerText = res.message;
-          msgEl.style.color = "var(--pico-ins-color)";
-          document.getElementById('booking-form').reset();
-          goToStep(1);
-        } else {
-          msgEl.innerText = res.message;
-          msgEl.style.color = "var(--pico-del-color)";
-        }
-      });
-    }
-
-    function formatDateForInput(dateObj) {
-      const year = dateObj.getFullYear();
-      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const day = String(dateObj.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-
-    function capitalizeFirstLetter(string) {
-      if (!string) return '';
-      return string.charAt(0).toUpperCase() + string.slice(1);
-    }
-  </script>
 </body>
 </html>

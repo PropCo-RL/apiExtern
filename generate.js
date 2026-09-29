@@ -1,10 +1,26 @@
 const fs = require('fs');
 const path = require('path');
+const { SHARED_CSS } = require('./css');
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyMD7mGXRmW9IQFIK9gRLUBRWwprCudXEhfWEDDGk9iyvNe0yyK6w5gIuhLXZOFue8Z3w/exec";
 
 // ==========================================
-// RECHTLICHE TEXTE AUS EXTERNER LEGAL.HTML EINLESEN
+// HEADER & FOOTER EINLESEN
+// ==========================================
+let HEADER_HTML = "";
+let FOOTER_HTML = "";
+
+try {
+  const hfPath = path.join(process.cwd(), 'header_footer.html');
+  const hfContent = fs.readFileSync(hfPath, 'utf8');
+  HEADER_HTML = hfContent.split('<!-- HEADER -->')[1]?.split('<!-- /HEADER -->')[0] || '';
+  FOOTER_HTML = hfContent.split('<!-- FOOTER -->')[1]?.split('<!-- /FOOTER -->')[0] || '';
+} catch (err) {
+  console.warn("Warnung: header_footer.html konnte nicht gelesen werden.", err);
+}
+
+// ==========================================
+// RECHTLICHE TEXTE EINLESEN
 // ==========================================
 let IMPRESSUM_BODY = "";
 let AGB_BODY = "";
@@ -14,20 +30,17 @@ try {
   const legalHtmlPath = path.join(process.cwd(), 'legal.html');
   const legalHtmlContent = fs.readFileSync(legalHtmlPath, 'utf8');
 
-  // Versucht Abschnitte anhand von Kommentaren oder Daten-Attributen zu trennen,
-  // andernfalls wird der gesamte Inhalt als Fallback genutzt.
   if (legalHtmlContent.includes('<!-- IMPRESSUM -->')) {
     IMPRESSUM_BODY = legalHtmlContent.split('<!-- IMPRESSUM -->')[1]?.split('<!-- /IMPRESSUM -->')[0] || '';
     AGB_BODY = legalHtmlContent.split('<!-- AGB -->')[1]?.split('<!-- /AGB -->')[0] || '';
     DATENSCHUTZ_BODY = legalHtmlContent.split('<!-- DATENSCHUTZ -->')[1]?.split('<!-- /DATENSCHUTZ -->')[0] || '';
   } else {
-    // Fallback: Wenn keine HTML-Kommentar-Marker existieren, wird der Inhalt von legal.html zugewiesen
     IMPRESSUM_BODY = legalHtmlContent;
     AGB_BODY = legalHtmlContent;
     DATENSCHUTZ_BODY = legalHtmlContent;
   }
 } catch (err) {
-  console.warn("Warnung: legal.html konnte nicht gelesen werden. Stelle sicher, dass die Datei im Wurzelverzeichnis liegt.", err);
+  console.warn("Warnung: legal.html konnte nicht gelesen werden.", err);
 }
 
 function optimizeImageUrl(url, width = 600) {
@@ -37,222 +50,6 @@ function optimizeImageUrl(url, width = 600) {
   }
   return url;
 }
-
-// ==========================================
-// SHARED CSS STYLES
-// ==========================================
-const SHARED_CSS = `
-    :root { 
-      --pico-border-radius: 12px; 
-      --pico-font-size: 95%; 
-    }
-
-    body { 
-      padding-bottom: 70px; 
-      margin: 0 !important;
-      padding-left: 0 !important;
-      padding-right: 0 !important;
-      overflow-x: hidden !important;
-      overflow-y: auto !important;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    main.container {
-      max-width: 1200px !important;
-      box-sizing: border-box !important;
-      padding-left: 15px !important;
-      padding-right: 15px !important;
-      margin: 0 auto !important;
-      padding-top: 1.5rem !important;
-      padding-bottom: 2rem !important;
-    }
-
-    .catalog-grid { 
-      display: grid; 
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
-      gap: 1.5rem; 
-      margin-top: 1.5rem;
-    }
-
-    .cities-grid { 
-      display: grid; 
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
-      gap: 1.2rem; 
-      margin-top: 1.5rem; 
-    }
-
-    .city-card { 
-      padding: 1.2rem; 
-      text-align: center; 
-      font-weight: bold; 
-      font-size: 1.1rem; 
-      border: 1px solid var(--pico-border-color); 
-      border-radius: 12px; 
-      text-decoration: none; 
-      color: var(--pico-color);
-      display: block; 
-      transition: background 0.2s ease, border-color 0.2s ease;
-    }
-
-    .city-card:hover { 
-      background: var(--pico-primary-background); 
-      border-color: var(--pico-primary);
-    }
-
-    .apt-card { 
-      padding: 0; 
-      overflow: hidden; 
-      margin-bottom: 0; 
-      display: flex; 
-      flex-direction: column; 
-      border: 1px solid var(--pico-border-color); 
-    }
-
-    .apt-card img { 
-      width: 100%; 
-      height: 180px; 
-      object-fit: cover; 
-      background-color: #f1f5f9;
-    }
-
-    .apt-card-content { 
-      padding: 1rem; 
-      display: flex; 
-      flex-direction: column; 
-      flex-grow: 1; 
-    }
-
-    .gallery-grid { 
-      display: grid; 
-      grid-template-columns: 2fr 1fr 1fr; 
-      grid-template-rows: 170px 170px; 
-      gap: 8px; 
-      border-radius: 16px; 
-      overflow: hidden; 
-      margin-bottom: 1.5rem; 
-    }
-
-    .gallery-grid-item { 
-      width: 100%; 
-      height: 100%; 
-      object-fit: cover; 
-      cursor: pointer; 
-      transition: opacity 0.2s ease; 
-    }
-
-    .gallery-grid-item:hover { opacity: 0.88; }
-    .gallery-grid-item:first-child { grid-row: span 2; }
-
-    @media (max-width: 768px) {
-      .gallery-grid { 
-        display: flex; 
-        overflow-x: auto; 
-        scroll-snap-type: x mandatory; 
-        grid-template-columns: none; 
-        grid-template-rows: none; 
-        height: 250px; 
-        border-radius: 12px; 
-      }
-      .gallery-grid-item { 
-        flex: 0 0 85%; 
-        scroll-snap-align: start; 
-      }
-      .gallery-grid-item:first-child { grid-row: auto; }
-    }
-
-    /* BADGE FARBEN */
-    .badge { 
-      display: inline-block; 
-      padding: 0.25rem 0.65rem; 
-      font-size: 0.75rem; 
-      font-weight: 700; 
-      border-radius: 20px; 
-      margin-bottom: 0.5rem; 
-    }
-    .badge-success { background-color: #dcfce7 !important; color: #15803d !important; }
-    .badge-warning { background-color: #fef3c7 !important; color: #b45309 !important; }
-    .badge-danger  { background-color: #fee2e2 !important; color: #991b1b !important; }
-
-    .trust-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-top: 0.8rem;
-      font-size: 0.9rem;
-      color: var(--pico-muted-color);
-    }
-    .trust-item {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .hidden { display: none !important; }
-
-    .lightbox-modal { 
-      display: none; position: fixed; z-index: 9999; left: 0; top: 0; 
-      width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); 
-      justify-content: center; align-items: center; flex-direction: column; 
-    }
-    .lightbox-modal img { max-width: 90%; max-height: 80vh; border-radius: 8px; object-fit: contain; }
-    .lightbox-controls { margin-top: 15px; display: flex; gap: 20px; }
-    .lightbox-btn { background: #fff; color: #000; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-    .lightbox-close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 35px; font-weight: bold; cursor: pointer; }
-
-    .detail-grid-container { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-top: 1.5rem; }
-    @media (max-width: 768px) { .detail-grid-container { grid-template-columns: 1fr; } }
-
-    /* MULTI-STEP CHECKOUT STYLES */
-    .step-indicator { display: flex; justify-content: space-between; margin-bottom: 1.5rem; position: relative; }
-    .step-indicator::before { content: ''; position: absolute; top: 15px; left: 0; right: 0; height: 2px; background: var(--pico-border-color); z-index: 1; }
-    .step-item { position: relative; z-index: 2; background: var(--pico-card-background-color); padding: 0 10px; display: flex; flex-direction: column; align-items: center; font-size: 0.8rem; font-weight: 600; color: var(--pico-muted-color); }
-    .step-number { width: 32px; height: 32px; border-radius: 50%; background: var(--pico-border-color); color: var(--pico-color); display: flex; align-items: center; justify-content: center; margin-bottom: 4px; font-weight: bold; }
-    .step-item.active .step-number { background: var(--pico-primary); color: #fff; }
-    .step-item.active { color: var(--pico-color); }
-    .step-item.completed .step-number { background: #15803d; color: #fff; }
-    .step-buttons { display: flex; justify-content: space-between; margin-top: 1.5rem; gap: 10px; }
-`;
-
-const HEADER_HTML = `
-  <header class="container" style="padding-top: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--pico-border-color);">
-    <nav>
-      <ul>
-        <li><strong style="font-size: 1.75rem; cursor: pointer; font-weight: 700;" onclick="window.location.href='/'">L8 Street</strong></li>
-      </ul>
-      <ul>
-        <li>
-          <a href="https://wa.me/4917684801295" target="_blank" style="text-decoration:none; font-weight: 600;">
-            <span>+49 176 8480 1295</span>
-          </a>
-        </li>
-      </ul>
-    </nav>
-  </header>
-`;
-
-const FOOTER_HTML = `
-  <footer class="container" style="margin-top: 4rem; border-top: 1px solid var(--pico-border-color); padding-top: 2rem; padding-bottom: 2rem;">
-    <div class="grid">
-      <div>
-        <strong>Monteurwohnungen</strong><br>
-        <small><a href="/pforzheim/">Monteurwohnung Pforzheim</a></small><br>
-        <small><a href="/karlsruhe/">Monteurwohnung Karlsruhe</a></small><br>
-        <small><a href="/stuttgart/">Monteurwohnung Stuttgart</a></small>
-      </div>
-      <div>
-        <strong>Kontakt</strong><br>
-        <small><a href="https://wa.me/4917684801295" style="text-decoration:none; color:inherit;">+49 176 8480 1295</a></small><br>
-        <small>support@L8Street.com</small>
-      </div>
-      <div>
-        <strong>Rechtliches</strong><br>
-        <small><a href="/impressum/">Impressum</a></small><br>
-        <small><a href="/datenschutz/">Datenschutz</a></small><br>
-        <small><a href="/agb/">AGB</a></small>
-      </div>
-    </div>
-  </footer>
-`;
 
 function parseImages(rawImages) {
   let images = rawImages;
@@ -568,7 +365,6 @@ async function buildSite() {
       fs.mkdirSync(cityDir, { recursive: true });
     }
 
-    // Sortierung der Wohnungen (Grün > Gelb > Rot)
     cityData.list.sort((a, b) => {
       const infoA = availMap[a.id] || {};
       const infoB = availMap[b.id] || {};
@@ -744,7 +540,7 @@ async function buildSite() {
   generateLegalPage('agb', 'AGB - Allgemeine Geschäftsbedingungen', AGB_BODY);
   generateLegalPage('datenschutz', 'Datenschutzerklärung', DATENSCHUTZ_BODY);
 
-  console.log("Startseite, Detailseiten, Stadtpages und Legal-Pages (AGB, Impressum, Datenschutz) erfolgreich generiert!");
+  console.log("Startseite, Detailseiten, Stadtpages und Legal-Pages erfolgreich generiert!");
 }
 
 buildSite();

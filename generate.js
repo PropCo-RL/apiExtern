@@ -112,16 +112,6 @@ const SHARED_CSS = `
     .hidden { display: none !important; }
 
     article.compact-box { padding: 1rem 1.2rem; border-radius: 14px; margin-bottom: 1.5rem; }
-    article.compact-box label { font-size: 0.85rem; margin-bottom: 0.2rem; font-weight: 600; }
-    article.compact-box input { padding: 0.5rem 0.75rem; font-size: 0.95rem; margin-bottom: 0; }
-
-    .search-inline-form { display: flex; gap: 10px; align-items: flex-end; }
-    .search-inline-form > div { flex-grow: 1; }
-    .search-inline-form button { width: auto; padding: 0.5rem 1.5rem; margin-bottom: 0; }
-
-    @media (max-width: 768px) { 
-      .search-inline-form { flex-direction: column; align-items: stretch; gap: 15px; } 
-    }
 
     .lightbox-modal { 
       display: none; position: fixed; z-index: 9999; left: 0; top: 0; 
@@ -658,19 +648,7 @@ async function buildSite() {
   </header>
 
   <main class="container">
-    <div id="search-bar-container">
-      <article class="compact-box">
-        <form onsubmit="handleSearchSubmit(event)" class="search-inline-form">
-          <div>
-            <label for="search-dest">Wo suchen Sie eine Unterkunft?</label>
-            <input type="text" id="search-dest" placeholder="z. B. Gera, Pforzheim, Karlsruhe..." required>
-          </div>
-          <button type="submit">Suchen</button>
-        </form>
-      </article>
-    </div>
-
-    <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Verfügbare Monteurwohnungen in ${cityData.name}</h3>
+    <h1 style="margin-bottom: 1.5rem; font-size: 1.75rem; font-weight: 700;">Monteurwohnungen in ${cityData.name}</h1>
     <div class="catalog-grid">${cardsHtml}</div>
   </main>
 
@@ -709,14 +687,6 @@ async function buildSite() {
             }
           });
         });
-    }
-
-    function handleSearchSubmit(e) {
-      e.preventDefault();
-      const dest = document.getElementById('search-dest').value.trim().toLowerCase();
-      if (dest) {
-        window.location.href = '/' + encodeURIComponent(dest) + '/';
-      }
     }
   </script>
 </body>

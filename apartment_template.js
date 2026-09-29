@@ -11,7 +11,8 @@ function renderApartmentHtml({
   SHARED_CSS,
   HEADER_HTML,
   FOOTER_HTML,
-  API_URL
+  API_URL,
+  FAVICON_HTML
 }) {
   return `<!DOCTYPE html>
 <html lang="de" data-theme="light">
@@ -19,6 +20,7 @@ function renderApartmentHtml({
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title} | L8 Street</title>
+  ${FAVICON_HTML || ''}
   <meta name="description" content="${title} in ${fullAddress}. Voll ausgestattete Monteurwohnung mit eigenen Zimmern, Küche, Bad, WLAN & Waschmaschine. Jetzt direkt online buchen.">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css">
   <style>${SHARED_CSS}</style>

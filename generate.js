@@ -3,7 +3,9 @@ const path = require('path');
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyMD7mGXRmW9IQFIK9gRLUBRWwprCudXEhfWEDDGk9iyvNe0yyK6w5gIuhLXZOFue8Z3w/exec";
 
-// Gemeinsamer CSS-Block
+// ==========================================
+// WIEDERVERWENDBARE BAUSTEINE (HEADER / FOOTER / CSS)
+// ==========================================
 const SHARED_CSS = `
     :root { 
       --pico-border-radius: 12px; 
@@ -34,6 +36,31 @@ const SHARED_CSS = `
       display: grid; 
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
       gap: 1.5rem; 
+    }
+
+    .cities-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+      gap: 1.2rem; 
+      margin-top: 1.5rem; 
+    }
+
+    .city-card { 
+      padding: 1.2rem; 
+      text-align: center; 
+      font-weight: bold; 
+      font-size: 1.1rem; 
+      border: 1px solid var(--pico-border-color); 
+      border-radius: 12px; 
+      text-decoration: none; 
+      color: var(--pico-color);
+      display: block; 
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .city-card:hover { 
+      background: var(--pico-primary-background); 
+      border-color: var(--pico-primary);
     }
 
     .apt-card { 
@@ -135,6 +162,47 @@ const SHARED_CSS = `
     .step-buttons { display: flex; justify-content: space-between; margin-top: 1.5rem; gap: 10px; }
 `;
 
+const HEADER_HTML = `
+  <header class="container" style="padding-top: 0.8rem; padding-bottom: 0.8rem;">
+    <nav>
+      <ul>
+        <li><strong style="font-size: 1.75rem; cursor: pointer; font-weight: 700;" onclick="window.location.href='/'">L8 Street</strong></li>
+      </ul>
+      <ul>
+        <li>
+          <a href="https://wa.me/4917684801295" target="_blank" style="text-decoration:none;">
+            <span>+49 176 8480 1295</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </header>
+`;
+
+const FOOTER_HTML = `
+  <footer class="container" style="margin-top: 3rem; border-top: 1px solid var(--pico-border-color); padding-top: 2rem; padding-bottom: 2rem;">
+    <div class="grid">
+      <div>
+        <strong>Monteurwohnungen</strong><br>
+        <small><a href="/pforzheim/">Monteurwohnung Pforzheim</a></small><br>
+        <small><a href="/karlsruhe/">Monteurwohnung Karlsruhe</a></small><br>
+        <small><a href="/stuttgart/">Monteurwohnung Stuttgart</a></small>
+      </div>
+      <div>
+        <strong>Kontakt</strong><br>
+        <small><a href="https://wa.me/4917684801295" style="text-decoration:none; color:inherit;">+49 176 8480 1295</a></small><br>
+        <small>support@L8Street.com</small>
+      </div>
+      <div>
+        <strong>Rechtliches</strong><br>
+        <small><a href="/legal.html?page=impressum">Impressum</a></small><br>
+        <small><a href="/legal.html?page=datenschutz">Datenschutz</a></small><br>
+        <small><a href="/legal.html?page=agb">AGB</a></small>
+      </div>
+    </div>
+  </footer>
+`;
+
 function parseImages(rawImages) {
   let images = rawImages;
   if (typeof images === 'string') {
@@ -172,15 +240,14 @@ async function buildSite() {
 
   console.log(`${apartments.length} Apartments gefunden.`);
 
-  // Verfügbarkeiten direkt beim Build abfragen
-  console.log("Hole Verfügbarkeiten für Sortierung...");
+  console.log("Hole Verfügbarkeiten...");
   const allIds = apartments.map(a => a.id).filter(Boolean);
   let availMap = {};
   try {
     const availRes = await fetch(`${API_URL}?action=getAvailability&ids=${allIds.join(',')}`);
     availMap = await availRes.json();
   } catch (err) {
-    console.warn("Konnte Verfügbarkeiten nicht abrufen, fahre ohne Fort:", err);
+    console.warn("Konnte Verfügbarkeiten nicht abrufen:", err);
   }
 
   // ==========================================
@@ -224,34 +291,17 @@ async function buildSite() {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title} | L8 Street</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css">
-  <style>
-  ${SHARED_CSS}
-  </style>
+  <style>${SHARED_CSS}</style>
 </head>
 <body>
 
-  <header class="container" style="padding-top: 0.8rem; padding-bottom: 0.8rem;">
-    <nav>
-      <ul>
-        <li><strong style="font-size: 1.75rem; cursor: pointer; font-weight: 700;" onclick="window.location.href='/'">L8 Street</strong></li>
-      </ul>
-      <ul>
-        <li>
-          <a href="https://wa.me/4917684801295" target="_blank" style="text-decoration:none;">
-            <span>+49 176 8480 1295</span>
-          </a>
-        </li>
-      </ul>
-    </nav>
-  </header>
+  ${HEADER_HTML}
 
   <main class="container">
     <button class="secondary outline" onclick="window.location.href='/'" style="width: auto; margin-bottom: 1rem;">← Zurück zur Übersicht</button>
 
     <article>
-      <div id="detail-gallery-grid" class="gallery-grid">
-        ${galleryItemsHtml}
-      </div>
+      <div id="detail-gallery-grid" class="gallery-grid">${galleryItemsHtml}</div>
 
       <h2 style="margin-bottom: 0.2rem; margin-top: 1rem;">${title}</h2>
       <p style="color: var(--pico-muted-color); font-size: 0.95rem; margin-bottom: 1.5rem;">${fullAddress}</p>
@@ -259,12 +309,10 @@ async function buildSite() {
       <div class="detail-grid-container">
         <div>
           <p><strong>Gesamte Monteurwohnung mit eigener Küche und eigenem Badezimmer (keine geteilten Bereiche).</strong></p>
-          
           <div style="margin: 1rem 0;">
             <p style="margin-bottom: 0.2rem;"><strong>Schlafzimmer:</strong> <span>${bedrooms}</span></p>
             <p style="margin-bottom: 0.2rem;"><strong>Einzelbetten:</strong> <span>${beds}</span></p>
           </div>
-
           <p style="margin-bottom: 0.5rem;"><strong>Ausstattung:</strong></p>
           <ul style="padding-left: 1.2rem; margin-bottom: 1.5rem;">
             <li>2 Einzelbetten pro Schlafzimmer</li>
@@ -275,7 +323,6 @@ async function buildSite() {
             <li>Waschmaschine kostenfrei inklusive</li>
             <li>Parkmöglichkeiten vorhanden</li>
           </ul>
-
           <p style="color: var(--pico-muted-color); font-size: 0.95rem;">${description}</p>
         </div>
 
@@ -360,7 +407,7 @@ async function buildSite() {
     </article>
   </main>
 
-  <footer class="container" style="margin-top: 3rem; border-top: 1px solid var(--pico-border-color); padding-top: 2rem;"><p style="text-align:center; font-size:0.85rem;">&copy; L8 Street Monteurunterkünfte</p></footer>
+  ${FOOTER_HTML}
 
   <div id="lightboxModal" class="lightbox-modal">
     <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
@@ -458,7 +505,7 @@ async function buildSite() {
       fs.mkdirSync(cityDir, { recursive: true });
     }
 
-    // SORTIERUNG DURCHFÜHREN (Grün > Gelb > Rot)
+    // Sortierung (Grün > Gelb > Rot)
     cityData.list.sort((a, b) => {
       const infoA = availMap[a.id] || {};
       const infoB = availMap[b.id] || {};
@@ -483,7 +530,6 @@ async function buildSite() {
       const images = parseImages(apt.images);
       const firstImg = images[0];
 
-      // Badges direkt statisch erzeugen
       let badgeHtml = '';
       const info = availMap[aptId] || {};
       if (info.isDirectlyAvailable) {
@@ -518,35 +564,18 @@ async function buildSite() {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Monteurunterkünfte in ${cityData.name} | L8 Street</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css">
-  <style>
-  ${SHARED_CSS}
-  </style>
+  <style>${SHARED_CSS}</style>
 </head>
 <body>
 
-  <header class="container" style="padding-top: 0.8rem; padding-bottom: 0.8rem;">
-    <nav>
-      <ul>
-        <li><strong style="font-size: 1.75rem; cursor: pointer; font-weight: 700;" onclick="window.location.href='/'">L8 Street</strong></li>
-      </ul>
-      <ul>
-        <li>
-          <a href="https://wa.me/4917684801295" target="_blank" style="text-decoration:none;">
-            <span>+49 176 8480 1295</span>
-          </a>
-        </li>
-      </ul>
-    </nav>
-  </header>
+  ${HEADER_HTML}
 
   <main class="container">
     <h1 style="margin-bottom: 1.5rem; font-size: 1.75rem; font-weight: 700;">Monteurwohnungen in ${cityData.name}</h1>
     <div class="catalog-grid">${cardsHtml}</div>
   </main>
 
-  <footer class="container" style="margin-top: 3rem; border-top: 1px solid var(--pico-border-color); padding-top: 2rem;">
-    <p style="text-align:center; font-size:0.85rem;">&copy; L8 Street Monteurunterkünfte</p>
-  </footer>
+  ${FOOTER_HTML}
 
 </body>
 </html>`;
@@ -554,7 +583,47 @@ async function buildSite() {
     fs.writeFileSync(path.join(cityDir, 'index.html'), cityHtmlContent);
   });
 
-  console.log("Detailseiten und Stadtpages erfolgreich generiert!");
+  // ==========================================
+  // 3. HAUPT-STARTSEITE GENERIEREN (/index.html)
+  // ==========================================
+  let cityCardsHtml = '';
+  Object.keys(citiesMap).sort().forEach(key => {
+    const c = citiesMap[key];
+    cityCardsHtml += `<a href="/${key}/" class="city-card">${c.name}</a>\n`;
+  });
+
+  const homepageContent = `<!DOCTYPE html>
+<html lang="de" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monteurunterkünfte & Monteurwohnungen | L8 Street</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css">
+  <style>${SHARED_CSS}</style>
+</head>
+<body>
+
+  ${HEADER_HTML}
+
+  <main class="container">
+    <div style="text-align: center; margin-top: 1.5rem; margin-bottom: 2rem;">
+      <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">Monteurunterkünfte & Monteurwohnungen</h1>
+      <p style="color: var(--pico-muted-color); font-size: 1.1rem;">Wählen Sie Ihren Standort aus, um alle verfügbaren Wohnungen zu sehen:</p>
+    </div>
+
+    <div class="cities-grid">
+      ${cityCardsHtml}
+    </div>
+  </main>
+
+  ${FOOTER_HTML}
+
+</body>
+</html>`;
+
+  fs.writeFileSync(path.join(process.cwd(), 'index.html'), homepageContent);
+
+  console.log("Startseite, Detailseiten und Stadtpages erfolgreich generiert!");
 }
 
 buildSite();

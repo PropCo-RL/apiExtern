@@ -5,6 +5,9 @@ const { renderApartmentHtml } = require('./apartment_template');
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyMD7mGXRmW9IQFIK9gRLUBRWwprCudXEhfWEDDGk9iyvNe0yyK6w5gIuhLXZOFue8Z3w/exec";
 
+// Favicon per SVG Data-URI (Zeigt sauberes L8-Logo im Tab)
+const FAVICON_HTML = `<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23111827'/><text x='50' y='68' font-size='50' font-weight='bold' font-family='sans-serif' fill='white' text-anchor='middle'>L8</text></svg>">`;
+
 // ==========================================
 // RESSOURCEN DIREKT EINLESEN
 // ==========================================
@@ -68,7 +71,8 @@ async function buildSite() {
   console.log(`${apartments.length} Apartments gefunden.`);
 
   console.log("Hole Verfügbarkeiten...");
-  const allIds = apartments.map(a => a.id).filter(Boolean);
+  // Schicke sowohl IDs als auch internalTitles ab, um 100%ige Abdeckung zu haben
+  const allIds = apartments.map(a => a.id || a.internalTitle).filter(Boolean);
   let availMap = {};
   try {
     const availRes = await fetch(`${API_URL}?action=getAvailability&ids=${allIds.join(',')}`);
@@ -111,7 +115,7 @@ async function buildSite() {
 
     const htmlContent = renderApartmentHtml({
       title, fullAddress, bedrooms, beds, price, description, aptCode,
-      galleryItemsHtml, images, SHARED_CSS, HEADER_HTML, FOOTER_HTML, API_URL
+      galleryItemsHtml, images, SHARED_CSS, HEADER_HTML, FOOTER_HTML, API_URL, FAVICON_HTML
     });
 
     fs.writeFileSync(path.join(dir, 'index.html'), htmlContent);
@@ -133,8 +137,8 @@ async function buildSite() {
     if (!fs.existsSync(cityDir)) fs.mkdirSync(cityDir, { recursive: true });
 
     cityData.list.sort((a, b) => {
-      const infoA = availMap[a.id] || {};
-      const infoB = availMap[b.id] || {};
+      const infoA = availMap[a.id] || availMap[a.internalTitle] || {};
+      const infoB = availMap[b.id] || availMap[b.internalTitle] || {};
       const scoreA = infoA.isDirectlyAvailable ? 3 : (infoA.availableFromDate ? 2 : 1);
       const scoreB = infoB.isDirectlyAvailable ? 3 : (infoB.availableFromDate ? 2 : 1);
       return scoreB - scoreA;
@@ -150,14 +154,15 @@ async function buildSite() {
       const price = apt.pricePerNight || apt.Preis || '49';
       const rawPath = apt.Apartment || apt.apartmentPath || apt.apartment || '';
       const cleanPath = rawPath.toString().replace(/^\/+|\/+$/g, '').trim();
-      const aptId = apt.id || '';
 
       const images = parseImages(apt.images);
       const firstImg = optimizeImageUrl(images[0], 600);
       const loadingAttr = index === 0 ? 'fetchpriority="high"' : 'loading="lazy"';
 
       let badgeHtml = '';
-      const info = availMap[aptId] || {};
+      // Prüfe sowohl unter ID als auch unter internalTitle
+      const info = availMap[apt.id] || availMap[apt.internalTitle] || {};
+      
       if (info.isDirectlyAvailable) {
         badgeHtml = `<span class="badge badge-success">Sofort verfügbar</span>`;
       } else if (info.availableFromDate) {
@@ -188,7 +193,8 @@ async function buildSite() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Monteurunterkünfte in ${cityData.name} | L8 Street</title>
+  <title>Monteurwohnungen in ${cityData.name} | L8 Street</title>
+  ${FAVICON_HTML}
   <meta name="description" content="Monteurunterkünfte & Monteurwohnungen in ${cityData.name} mieten. Eigene Küche, Bad, WLAN & Waschmaschine inklusive. Jetzt Verfügbarkeit prüfen & buchen.">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css">
   <style>${SHARED_CSS}</style>
@@ -228,7 +234,8 @@ async function buildSite() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Monteurunterkünfte & Monteurwohnungen | L8 Street</title>
+  <title>Monteurwohnungen L8 Street</title>
+  ${FAVICON_HTML}
   <meta name="description" content="Mieten Sie voll ausgestattete Monteurwohnungen & Monteurunterkünfte in über 20 Städten. Inklusive Küche, Bad, WLAN & Parkmöglichkeiten.">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css">
   <style>${SHARED_CSS}</style>
@@ -261,6 +268,7 @@ async function buildSite() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${titleStr} | L8 Street</title>
+  ${FAVICON_HTML}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css">
   <style>
     ${SHARED_CSS}

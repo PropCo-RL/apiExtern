@@ -3,7 +3,7 @@ const path = require('path');
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyMD7mGXRmW9IQFIK9gRLUBRWwprCudXEhfWEDDGk9iyvNe0yyK6w5gIuhLXZOFue8Z3w/exec";
 
-// Gemeinsamer CSS-Block aus Skript 1
+// Gemeinsamer CSS-Block
 const SHARED_CSS = `
     :root { 
       --pico-border-radius: 12px; 
@@ -111,8 +111,6 @@ const SHARED_CSS = `
 
     .hidden { display: none !important; }
 
-    article.compact-box { padding: 1rem 1.2rem; border-radius: 14px; margin-bottom: 1.5rem; }
-
     .lightbox-modal { 
       display: none; position: fixed; z-index: 9999; left: 0; top: 0; 
       width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); 
@@ -137,7 +135,6 @@ const SHARED_CSS = `
     .step-buttons { display: flex; justify-content: space-between; margin-top: 1.5rem; gap: 10px; }
 `;
 
-// Helper-Funktion zum sauberen Verarbeiten von Bild-URLs aus dem Google Sheet
 function parseImages(rawImages) {
   let images = rawImages;
   if (typeof images === 'string') {
@@ -175,6 +172,17 @@ async function buildSite() {
 
   console.log(`${apartments.length} Apartments gefunden.`);
 
+  // Verfügbarkeiten direkt beim Build abfragen
+  console.log("Hole Verfügbarkeiten für Sortierung...");
+  const allIds = apartments.map(a => a.id).filter(Boolean);
+  let availMap = {};
+  try {
+    const availRes = await fetch(`${API_URL}?action=getAvailability&ids=${allIds.join(',')}`);
+    availMap = await availRes.json();
+  } catch (err) {
+    console.warn("Konnte Verfügbarkeiten nicht abrufen, fahre ohne Fort:", err);
+  }
+
   // ==========================================
   // 1. APARTMENT-DETAILSEITEN GENERIEREN (/a/...)
   // ==========================================
@@ -206,7 +214,7 @@ async function buildSite() {
 
     let galleryItemsHtml = '';
     images.slice(0, 5).forEach((imgUrl, index) => {
-      galleryItemsHtml += `<img src="${imgUrl}" class="gallery-grid-item" onclick="openLightbox(${index})" alt="${title}" onerror="this.onerror=null;this.src='${placeholderImg}';">`;
+      galleryItemsHtml += `<img src="${imgUrl}" class="gallery-grid-item" onclick="openLightbox(${index})" alt="${title}" loading="lazy" onerror="this.onerror=null;this.src='${placeholderImg}';">`;
     });
 
     const htmlContent = `<!DOCTYPE html>
@@ -215,10 +223,7 @@ async function buildSite() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title} | L8 Street</title>
-  
-  <!-- PICO CSS v2 -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css">
-
   <style>
   ${SHARED_CSS}
   </style>
@@ -288,46 +293,25 @@ async function buildSite() {
 
       <hr style="margin: 2rem 0;">
 
-      <!-- MULTI-STEP BUCHUNG -->
       <h3>Apartment buchen</h3>
       
       <div class="step-indicator">
-        <div class="step-item active" id="step-tab-1">
-          <div class="step-number">1</div>
-          <span>Reisedaten</span>
-        </div>
-        <div class="step-item" id="step-tab-2">
-          <div class="step-number">2</div>
-          <span>Kontaktdaten</span>
-        </div>
-        <div class="step-item" id="step-tab-3">
-          <div class="step-number">3</div>
-          <span>Rechnung</span>
-        </div>
+        <div class="step-item active" id="step-tab-1"><div class="step-number">1</div><span>Reisedaten</span></div>
+        <div class="step-item" id="step-tab-2"><div class="step-number">2</div><span>Kontaktdaten</span></div>
+        <div class="step-item" id="step-tab-3"><div class="step-number">3</div><span>Rechnung</span></div>
       </div>
 
       <form id="booking-form" onsubmit="handleBookingSubmit(event)">
         <input type="hidden" id="form-apt-title" value="${title}">
         <input type="hidden" id="form-apt-code" value="${aptCode}">
 
-        <!-- SCHRITT 1: REISE & ZYKLUS -->
         <div id="step-1">
           <div class="grid">
-            <div>
-              <label for="form-start">Anreise</label>
-              <input type="date" id="form-start" required>
-            </div>
-            <div>
-              <label for="form-end">Abreise</label>
-              <input type="date" id="form-end" required>
-            </div>
+            <div><label for="form-start">Anreise</label><input type="date" id="form-start" required></div>
+            <div><label for="form-end">Abreise</label><input type="date" id="form-end" required></div>
           </div>
-
           <div class="grid">
-            <div>
-              <label for="form-guests">Anzahl der Personen</label>
-              <input type="number" id="form-guests" value="4" min="1" required>
-            </div>
+            <div><label for="form-guests">Anzahl der Personen</label><input type="number" id="form-guests" value="4" min="1" required></div>
             <div>
               <label for="form-billing-cycle">Abrechnungszyklus</label>
               <select id="form-billing-cycle" required>
@@ -338,157 +322,75 @@ async function buildSite() {
               </select>
             </div>
           </div>
-
-          <div class="step-buttons">
-            <div></div>
-            <button type="button" onclick="goToStep(2)" style="width: auto;">Weiter zu Kontaktdaten →</button>
-          </div>
+          <div class="step-buttons"><div></div><button type="button" onclick="goToStep(2)" style="width: auto;">Weiter zu Kontaktdaten →</button></div>
         </div>
 
-        <!-- SCHRITT 2: KONTAKTDATEN & FIRMA -->
         <div id="step-2" class="hidden">
           <label for="form-company">Firma / Unternehmensname</label>
           <input type="text" id="form-company" placeholder="z. B. Muster Bau GmbH" required>
-
           <div class="grid">
-            <div>
-              <label for="form-vatid">Umsatzsteuer-ID (USt-ID)</label>
-              <input type="text" id="form-vatid" placeholder="DE123456789">
-            </div>
-            <div>
-              <label for="form-ref">Referenznummer <small>(optional)</small></label>
-              <input type="text" id="form-ref" placeholder="z. B. Projekt 2026-B">
-            </div>
+            <div><label for="form-vatid">Umsatzsteuer-ID (USt-ID)</label><input type="text" id="form-vatid" placeholder="DE123456789"></div>
+            <div><label for="form-ref">Referenznummer <small>(optional)</small></label><input type="text" id="form-ref" placeholder="z. B. Projekt 2026-B"></div>
           </div>
-
           <div class="grid">
-            <div>
-              <label for="form-email">E-Mail-Adresse (für Rechnungen)</label>
-              <input type="email" id="form-email" placeholder="name@firma.de" required>
-            </div>
-            <div>
-              <label for="form-phone">Telefon / WhatsApp</label>
-              <input type="text" id="form-phone" placeholder="+49 170 1234567" required>
-            </div>
+            <div><label for="form-email">E-Mail-Adresse (für Rechnungen)</label><input type="email" id="form-email" placeholder="name@firma.de" required></div>
+            <div><label for="form-phone">Telefon / WhatsApp</label><input type="text" id="form-phone" placeholder="+49 170 1234567" required></div>
           </div>
-
-          <div class="step-buttons">
-            <button type="button" class="secondary outline" onclick="goToStep(1)" style="width: auto;">← Zurück</button>
-            <button type="button" onclick="goToStep(3)" style="width: auto;">Weiter zu Rechnungsanschrift →</button>
-          </div>
+          <div class="step-buttons"><button type="button" class="secondary outline" onclick="goToStep(1)" style="width: auto;">← Zurück</button><button type="button" onclick="goToStep(3)" style="width: auto;">Weiter zu Rechnungsanschrift →</button></div>
         </div>
 
-        <!-- SCHRITT 3: RECHNUNGSANSCHRIFT & ABSCHLUSS -->
         <div id="step-3" class="hidden">
           <fieldset style="margin-bottom: 1rem;">
             <legend><strong>Rechnungsanschrift</strong></legend>
+            <div class="grid"><div style="grid-column: span 2;"><label for="form-street">Straße & Hausnummer</label><input type="text" id="form-street" placeholder="Musterstraße 12" required></div></div>
             <div class="grid">
-              <div style="grid-column: span 2;">
-                <label for="form-street">Straße & Hausnummer</label>
-                <input type="text" id="form-street" placeholder="Musterstraße 12" required>
-              </div>
+              <div><label for="form-zip">PLZ</label><input type="text" id="form-zip" placeholder="75175" required></div>
+              <div><label for="form-city">Ort</label><input type="text" id="form-city" placeholder="Pforzheim" required></div>
             </div>
-            <div class="grid">
-              <div>
-                <label for="form-zip">PLZ</label>
-                <input type="text" id="form-zip" placeholder="75175" required>
-              </div>
-              <div>
-                <label for="form-city">Ort</label>
-                <input type="text" id="form-city" placeholder="Pforzheim" required>
-              </div>
-            </div>
-            <label for="form-country">Land</label>
-            <input type="text" id="form-country" value="Deutschland" required>
+            <label for="form-country">Land</label><input type="text" id="form-country" value="Deutschland" required>
           </fieldset>
-
-          <blockquote style="margin: 1.5rem 0; font-size: 0.85rem;">
-            <strong>Wichtiger Hinweis zu Stornierungen:</strong> Kostenfreie Stornierung per E-Mail bis 14 Tage vor Anreise. Bei späterer Stornierung oder Nichtanreise (No-Show) fallen 100% Stornogebühren an.
-          </blockquote>
-
+          <blockquote style="margin: 1.5rem 0; font-size: 0.85rem;"><strong>Wichtiger Hinweis zu Stornierungen:</strong> Kostenfreie Stornierung per E-Mail bis 14 Tage vor Anreise. Bei späterer Stornierung oder Nichtanreise (No-Show) fallen 100% Stornogebühren an.</blockquote>
           <fieldset>
-            <label for="form-agb">
-              <input type="checkbox" id="form-agb" required>
-              Ich akzeptiere die <a href="https://l8street.com/agb" target="_blank">AGB</a> sowie die 
-              <a href="https://l8street.com/datenschutz" target="_blank">Datenschutzerklärung</a>.
-            </label>
+            <label for="form-agb"><input type="checkbox" id="form-agb" required> Ich akzeptiere die <a href="https://l8street.com/agb" target="_blank">AGB</a> sowie die <a href="https://l8street.com/datenschutz" target="_blank">Datenschutzerklärung</a>.</label>
           </fieldset>
-
-          <div class="step-buttons">
-            <button type="button" class="secondary outline" onclick="goToStep(2)" style="width: auto;">← Zurück</button>
-            <button type="submit" style="width: auto;">Jetzt verbindlich buchen</button>
-          </div>
+          <div class="step-buttons"><button type="button" class="secondary outline" onclick="goToStep(2)" style="width: auto;">← Zurück</button><button type="submit" style="width: auto;">Jetzt verbindlich buchen</button></div>
         </div>
       </form>
-
       <p id="form-msg" style="text-align: center; font-weight: bold; margin-top: 1rem;"></p>
     </article>
   </main>
 
-  <footer class="container" style="margin-top: 3rem; border-top: 1px solid var(--pico-border-color); padding-top: 2rem;">
-    <p style="text-align:center; font-size:0.85rem;">&copy; L8 Street Monteurunterkünfte</p>
-  </footer>
+  <footer class="container" style="margin-top: 3rem; border-top: 1px solid var(--pico-border-color); padding-top: 2rem;"><p style="text-align:center; font-size:0.85rem;">&copy; L8 Street Monteurunterkünfte</p></footer>
 
   <div id="lightboxModal" class="lightbox-modal">
     <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
     <img id="lightboxImg" src="" alt="Großansicht">
-    <div class="lightbox-controls">
-      <button class="lightbox-btn" onclick="changeLightboxImg(-1)">← Vorheriges</button>
-      <button class="lightbox-btn" onclick="changeLightboxImg(1)">Nächstes →</button>
-    </div>
+    <div class="lightbox-controls"><button class="lightbox-btn" onclick="changeLightboxImg(-1)">← Vorheriges</button><button class="lightbox-btn" onclick="changeLightboxImg(1)">Nächstes →</button></div>
   </div>
 
   <script>
     const API_URL = "${API_URL}";
     const currentGalleryImages = ${JSON.stringify(images)};
-    let currentImageIndex = 0;
-    let currentStep = 1;
-
+    let currentImageIndex = 0; let currentStep = 1;
     window.onload = function() {
-      const today = new Date();
-      const nextWeek = new Date(today.getTime() + 7*24*60*60*1000);
+      const today = new Date(); const nextWeek = new Date(today.getTime() + 7*24*60*60*1000);
       document.getElementById('form-start').value = formatDateForInput(today);
       document.getElementById('form-end').value = formatDateForInput(nextWeek);
     };
-
     function goToStep(stepNum) {
-      if (stepNum > currentStep) {
-        if (currentStep === 1) {
-          if (!document.getElementById('form-start').value || !document.getElementById('form-end').value) {
-            alert("Bitte wählen Sie Anreise- und Abreisedatum aus.");
-            return;
-          }
-        } else if (currentStep === 2) {
-          if (!document.getElementById('form-company').value || !document.getElementById('form-email').value) {
-            alert("Bitte füllen Sie Unternehmensname und E-Mail-Adresse aus.");
-            return;
-          }
-        }
-      }
-
       document.getElementById('step-1').classList.add('hidden');
       document.getElementById('step-2').classList.add('hidden');
       document.getElementById('step-3').classList.add('hidden');
-
       document.getElementById('step-' + stepNum).classList.remove('hidden');
-
       for (let i = 1; i <= 3; i++) {
         const tab = document.getElementById('step-tab-' + i);
         tab.classList.remove('active', 'completed');
         if (i < stepNum) tab.classList.add('completed');
         if (i === stepNum) tab.classList.add('active');
       }
-
       currentStep = stepNum;
     }
-
-    function openLightbox(index) {
-      currentImageIndex = index;
-      if (currentGalleryImages.length > 0) {
-        document.getElementById('lightboxImg').src = currentGalleryImages[currentImageIndex];
-        document.getElementById('lightboxModal').style.display = 'flex';
-      }
-    }
+    function openLightbox(index) { currentImageIndex = index; if (currentGalleryImages.length > 0) { document.getElementById('lightboxImg').src = currentGalleryImages[currentImageIndex]; document.getElementById('lightboxModal').style.display = 'flex'; } }
     function closeLightbox() { document.getElementById('lightboxModal').style.display = 'none'; }
     function changeLightboxImg(step) {
       if (currentGalleryImages.length === 0) return;
@@ -497,7 +399,6 @@ async function buildSite() {
       if (currentImageIndex >= currentGalleryImages.length) currentImageIndex = 0;
       document.getElementById('lightboxImg').src = currentGalleryImages[currentImageIndex];
     }
-
     function handleBookingSubmit(e) {
       e.preventDefault();
       const payload = {
@@ -518,33 +419,14 @@ async function buildSite() {
         refNumber: document.getElementById('form-ref').value,
         userAgent: navigator.userAgent
       };
-
-      const msgEl = document.getElementById('form-msg');
-      msgEl.innerText = "Verarbeite Buchung...";
-      msgEl.style.color = "var(--pico-primary)";
-
-      fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
-      .then(res => {
-        if (res.success) {
-          msgEl.innerText = res.message;
-          msgEl.style.color = "var(--pico-ins-color)";
-          document.getElementById('booking-form').reset();
-          goToStep(1);
-        } else {
-          msgEl.innerText = res.message;
-          msgEl.style.color = "var(--pico-del-color)";
-        }
+      const msgEl = document.getElementById('form-msg'); msgEl.innerText = "Verarbeite Buchung..."; msgEl.style.color = "var(--pico-primary)";
+      fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) }).then(res => res.json()).then(res => {
+        if (res.success) { msgEl.innerText = res.message; msgEl.style.color = "var(--pico-ins-color)"; document.getElementById('booking-form').reset(); goToStep(1); }
+        else { msgEl.innerText = res.message; msgEl.style.color = "var(--pico-del-color)"; }
       });
     }
-
     function formatDateForInput(dateObj) {
-      const year = dateObj.getFullYear();
-      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const day = String(dateObj.getDate()).padStart(2, '0');
+      const year = dateObj.getFullYear(); const month = String(dateObj.getMonth() + 1).padStart(2, '0'); const day = String(dateObj.getDate()).padStart(2, '0');
       return \`\${year}-\${month}-\${day}\`;
     }
   </script>
@@ -576,8 +458,16 @@ async function buildSite() {
       fs.mkdirSync(cityDir, { recursive: true });
     }
 
+    // SORTIERUNG DURCHFÜHREN (Grün > Gelb > Rot)
+    cityData.list.sort((a, b) => {
+      const infoA = availMap[a.id] || {};
+      const infoB = availMap[b.id] || {};
+      const scoreA = infoA.isDirectlyAvailable ? 3 : (infoA.availableFromDate ? 2 : 1);
+      const scoreB = infoB.isDirectlyAvailable ? 3 : (infoB.availableFromDate ? 2 : 1);
+      return scoreB - scoreA;
+    });
+
     let cardsHtml = '';
-    const aptIds = [];
 
     cityData.list.forEach(apt => {
       const title = apt.title || apt.Title || 'Monteurwohnung';
@@ -590,21 +480,26 @@ async function buildSite() {
       const cleanPath = rawPath.toString().replace(/^\/+|\/+$/g, '').trim();
       const aptId = apt.id || '';
 
-      if (aptId) aptIds.push(aptId);
-
       const images = parseImages(apt.images);
       const firstImg = images[0];
 
-      let placeholderBadge = aptId 
-        ? `<span id="badge-${aptId}" class="badge" style="background:#e2e8f0; color:#475569;">Prüfe Verfügbarkeit...</span>`
-        : '';
+      // Badges direkt statisch erzeugen
+      let badgeHtml = '';
+      const info = availMap[aptId] || {};
+      if (info.isDirectlyAvailable) {
+        badgeHtml = `<span class="badge badge-success">Sofort verfügbar</span>`;
+      } else if (info.availableFromDate) {
+        badgeHtml = `<span class="badge badge-warning">Frei ab: ${info.availableFromDate}</span>`;
+      } else {
+        badgeHtml = `<span class="badge badge-danger">Dauerhaft belegt</span>`;
+      }
 
       cardsHtml += `
         <article class="apt-card">
-          <img src="${firstImg}" alt="${title}" onerror="this.onerror=null;this.src='https://via.placeholder.com/600x400?text=Bild+nicht+verf%C3%BCgbar';">
+          <img src="${firstImg}" alt="${title}" loading="lazy" onerror="this.onerror=null;this.src='https://via.placeholder.com/600x400?text=Bild+nicht+verf%C3%BCgbar';">
           <div class="apt-card-content">
             <div>
-              ${placeholderBadge}
+              ${badgeHtml}
               <h4 style="margin-bottom:0.2rem;">${title}</h4>
               <p style="font-size:0.8rem; color:var(--pico-muted-color); margin-bottom:0.5rem;">${street}, ${zip} ${cityData.name}</p>
             </div>
@@ -622,10 +517,7 @@ async function buildSite() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Monteurunterkünfte in ${cityData.name} | L8 Street</title>
-  
-  <!-- PICO CSS v2 -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css">
-
   <style>
   ${SHARED_CSS}
   </style>
@@ -656,39 +548,6 @@ async function buildSite() {
     <p style="text-align:center; font-size:0.85rem;">&copy; L8 Street Monteurunterkünfte</p>
   </footer>
 
-  <script>
-    const API_URL = "${API_URL}";
-    const aptIds = ${JSON.stringify(aptIds)};
-
-    window.onload = function() {
-      if (aptIds && aptIds.length > 0) {
-        loadAvailabilitiesAsync(aptIds);
-      }
-    };
-
-    function loadAvailabilitiesAsync(ids) {
-      fetch(\`\${API_URL}?action=getAvailability&ids=\${ids.join(',')}\`)
-        .then(res => res.json())
-        .then(availMap => {
-          Object.keys(availMap).forEach(id => {
-            const badgeEl = document.getElementById('badge-' + id);
-            if (badgeEl) {
-              const info = availMap[id];
-              if (info.isDirectlyAvailable) {
-                badgeEl.className = "badge badge-success";
-                badgeEl.innerText = "Sofort verfügbar";
-              } else if (info.availableFromDate) {
-                badgeEl.className = "badge badge-warning";
-                badgeEl.innerText = "Frei ab: " + info.availableFromDate;
-              } else {
-                badgeEl.className = "badge badge-danger";
-                badgeEl.innerText = "Dauerhaft belegt";
-              }
-            }
-          });
-        });
-    }
-  </script>
 </body>
 </html>`;
 

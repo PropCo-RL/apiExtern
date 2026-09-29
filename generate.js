@@ -3,7 +3,6 @@ const path = require('path');
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyMD7mGXRmW9IQFIK9gRLUBRWwprCudXEhfWEDDGk9iyvNe0yyK6w5gIuhLXZOFue8Z3w/exec";
 
-// Helper: Komprimiert Google-Usercontent Bild-URLs extrem für Mobilgeräte
 function optimizeImageUrl(url, width = 600) {
   if (!url) return 'https://via.placeholder.com/600x400?text=Bild+nicht+verf%C3%BCgbar';
   if (url.includes('googleusercontent.com') && !url.includes('=w')) {
@@ -13,7 +12,7 @@ function optimizeImageUrl(url, width = 600) {
 }
 
 // ==========================================
-// SHARED STYLES & LAYOUT COMPONENTS
+// SHARED CSS STYLES
 // ==========================================
 const SHARED_CSS = `
     :root { 
@@ -220,9 +219,9 @@ const FOOTER_HTML = `
       </div>
       <div>
         <strong>Rechtliches</strong><br>
-        <small><a href="/legal.html?page=impressum">Impressum</a></small><br>
-        <small><a href="/legal.html?page=datenschutz">Datenschutz</a></small><br>
-        <small><a href="/legal.html?page=agb">AGB</a></small>
+        <small><a href="/impressum/">Impressum</a></small><br>
+        <small><a href="/datenschutz/">Datenschutz</a></small><br>
+        <small><a href="/agb/">AGB</a></small>
       </div>
     </div>
   </footer>
@@ -252,6 +251,158 @@ function parseImages(rawImages) {
 
   return images;
 }
+
+// 1:1 RECHTLICHE TEXTE
+const IMPRESSUM_BODY = `
+<h1>IMPRESSUM</h1>
+<p><strong>ANBIETER DER WEBSITE</strong><br>
+L8 Street GmbH<br>
+Hauptstraße 45<br>
+75223 Niefern-Öschelbronn<br>
+(Keine Postzustellung)</p>
+
+<p><strong>KONTAKT</strong><br>
+E-Mail: support@L8Street.com<br>
+WhatsApp: +4917684801295</p>
+
+<p>Amtsgericht Mannheim: HRB 728552<br>
+USt-ID: DE314603427<br>
+Steuernummer: 48051/24783<br>
+Geschäftsführer: Raul Leneweit<br>
+Sitz der Gesellschaft: Forststraße 65, 75223 Niefern-Öschelbronn</p>
+
+<h2>FIRMENEINTRAGUNG</h2>
+<p>Amtsgericht Mannheim, HRB 728552<br>
+Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (ODR) zur Verfügung. Sie ist zu finden unter: <a href="http://ec.europa.eu/consumers/odr/" target="_blank">http://ec.europa.eu/consumers/odr/</a>. L8 Street ist weder bereit noch verpflichtet, am Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+
+<h2>HAFTUNG FÜR INHALTE</h2>
+<p>Als Diensteanbieter sind wir gemäß § 7 Abs.1 TMG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Nach §§ 8 bis 10 TMG sind wir als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen. Verpflichtungen zur Entfernung oder Sperrung der Nutzung von Informationen nach den allgemeinen Gesetzen bleiben hiervon unberührt. Eine diesbezügliche Haftung ist jedoch erst ab dem Zeitpunkt der Kenntnis einer konkreten Rechtsverletzung möglich. Bei Bekanntwerden von entsprechenden Rechtsverletzungen werden wir diese Inhalte umgehend entfernen.</p>
+
+<h2>HAFTUNG FÜR LINKS</h2>
+<p>Unser Angebot enthält Links zu externen Webseiten Dritter, auf deren Inhalte wir keinen Einfluss haben. Deshalb können wir für diese fremden Inhalte auch keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich. Die verlinkten Seiten wurden zum Zeitpunkt der Verlinkung auf mögliche Rechtsverstöße überprüft. Rechtswidrige Inhalte waren zum Zeitpunkt der Verlinkung nicht erkennbar. Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konkrete Anhaltspunkte einer Rechtsverletzung nicht zumutbar. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Links umgehend entfernen.</p>
+
+<h2>COPYRIGHT</h2>
+<p>Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers. Downloads und Kopien dieser Seite sind nur für den privaten, nicht kommerziellen Gebrauch gestattet. Soweit die Inhalte auf dieser Seite nicht vom Betreiber erstellt wurden, werden die Urheberrechte Dritter beachtet. Insbesondere werden Inhalte Dritter als solche gekennzeichnet. Sollten Sie trotzdem auf eine Urheberrechtsverletzung aufmerksam werden, bitten wir um einen entsprechenden Hinweis. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Inhalte umgehend entfernen.</p>
+
+<hr style="margin: 2rem 0;">
+
+<h1>ENGLISH TRANSLATION</h1>
+<h2>Imprint</h2>
+<p><strong>PROVIDER OF THE WEBSITE</strong><br>
+L8 Street GmbH<br>
+Hauptstraße 45 (no mail delivery)<br>
+75223 Niefern-Öschelbronn</p>
+
+<p><strong>CONTACT</strong><br>
+Phone: +4917684801295<br>
+E-Mail: support@L8Street.com</p>
+
+<p><strong>COMPANY REGISTRATION</strong><br>
+Court Registry: Amtsgericht Mannheim HRB728552<br>
+Corporate VAT Number: DE314603427<br>
+Corporate Tax Number: 48051/24783<br>
+Responsible director: Mr. Raul Leneweit<br>
+Registered Address and headquarter of the corporation:<br>
+Forststrasse 65, 75223 Niefern-Oeschelbronn, Germany</p>
+
+<p>The European Commission provides a platform for Online Dispute Resolution (ODR). It can be found at: <a href="http://ec.europa.eu/consumers/odr/" target="_blank">http://ec.europa.eu/consumers/odr/</a>.<br>
+L8 Street is neither willing nor obliged to participate in dispute resolution proceedings before a consumer arbitration board.</p>
+
+<h2>LIABILITY FOR CONTENTS</h2>
+<p>As a service provider, we are responsible for our own content on these pages according to § 7 para.1 TMG (German Telemedia Act) and general laws. According to §§ 8 to 10 TMG we are not obliged to monitor transmitted or stored information or to investigate circumstances that indicate illegal activity. Obligations to remove or block the use of information according to general laws remain unaffected. However, liability in this respect is only possible from the time of knowledge of a concrete infringement. If we become aware of any such violations, we will remove the content in question immediately.</p>
+
+<h2>LIABILITY FOR LINKS</h2>
+<p>Our offer contains links to external websites of third parties, on whose contents we have no influence. Therefore we cannot assume any liability for these external contents. The respective provider or operator of the sites is always responsible for the contents of the linked sites. The linked sites were checked for possible legal violations at the time of linking. Illegal contents were not identified at the time of linking. However, a permanent control of the contents of the linked pages is not reasonable without concrete evidence of a violation of the law. If we become aware of any infringements, we will remove such links immediately.</p>
+
+<h2>COPYRIGHT</h2>
+<p>The contents and works on these pages created by the site operators are subject to German copyright law. The reproduction, editing, distribution and any kind of use outside the limits of copyright law require the written consent of the respective author or creator. Downloads and copies of these pages are only permitted for private, non-commercial use. Insofar as the content on this site was not created by the operator, the copyrights of third parties are observed. In particular, third-party content is identified as such. Should you nevertheless become aware of a copyright infringement, please inform us accordingly. If we become aware of any infringements, we will remove such contents immediately.</p>
+`;
+
+const AGB_BODY = `
+<h1>AGB - Allgemeine Geschäftsbedingungen</h1>
+<ol>
+  <li><strong>Geltung:</strong> Die AGB gelten für alle Beherbergungsverträge der L8 Street GmbH (“L8”) mit Gästen. Geschäftskunden Preise netto zzgl. MwSt und Endreinigung. Kommunale Abgaben ggf. durch Gast selbst geschuldet.</li>
+  <li><strong>Vertrag:</strong> Ein Vertrag kommt zustande, wenn L8 eine Buchung schriftlich bestätigt. Angebote sind freibleibend. Es besteht kein Anspruch auf ein bestimmtes Apartment.</li>
+  <li><strong>Haftung:</strong> Besteller und Nutzer haften gesamtschuldnerisch. L8 haftet nur bei Vorsatz/ grober Fahrlässigkeit. Keine Haftung für Wertsachen. Schäden und Mängel sofern zulässig per Pauschalen. Nachweis abweichenden Schadens bleibt möglich.</li>
+  <li><strong>Zahlung:</strong> Vorkasse per Bank. Keine Kaution.</li>
+  <li><strong>Storno (Buchung/Verlängerung):</strong> an support@l8street.com bis 14 Tage vor Start (7 Tage, wenn Aufenthalt mit Verlängerung &lt;7 Tage). Danach 100% pauschaler Schadensersatz gemäß Punkt 3. Gleiches gilt bei No-Show.</li>
+  <li><strong>Unbefristet:</strong> Ab der zweiten Verlängerung gilt die Buchung als unbefristet mit 14 Tagen Kündigungsfrist zum Beginn der nächsten Abrechnungsperiode. Danach 100% pauschaler Schadensersatz gemäß Punkt 3.</li>
+  <li><strong>Hausordnung:</strong> Anreise 16 - 21 Uhr, Abreise bis 10 Uhr. Ruhezeit 21 - 7 Uhr. Kein Rauchen, Störungen, Gewerbe.</li>
+  <li><strong>Übergabe:</strong> Mängel binnen 24h ab Anreise melden. Zugang ohne Zahlung eingeschränkt oder gegen Aufpreis.</li>
+  <li><strong>Internet:</strong> inklusive, Buchender haftet und stellt L8 von Ansprüchen Dritter frei.</li>
+  <li><strong>Nebenkosten:</strong> inklusive, bei übermäßigem Verbrauch (&gt;35kWh/Tag, Sommer 10kWh) Pauschale gemäß Punkt 3.</li>
+  <li><strong>Reinigung:</strong> pauschal in Höhe von einem Tagespreis. Mehrkosten bei übermäßigem Aufwand (&gt;4h Reinigung) möglich.</li>
+  <li><strong>Kommunikation:</strong> nur digital (e-mail, chat). Postversand nur auf ausdrücklichen Wunsch.</li>
+  <li><strong>Aufrechnung/ Zurückbehalt:</strong> nur wenn unbestritten oder rechtskräftig festgestellt.</li>
+  <li><strong>Datenschutz:</strong> www.L8Street.com/datenschutz.</li>
+  <li><strong>Schlussbestimmungen:</strong> Gerichtsstand ist Sitz der L8 Street GmbH (sofern zulässig). Es gilt deutsches Recht. Nebenabreden bedürfen der Schriftform.</li>
+</ol>
+
+<hr style="margin: 2rem 0;">
+
+<h1>ENGLISH TRANSLATION</h1>
+<h2>Terms</h2>
+<ol>
+  <li><strong>Scope:</strong> These Terms apply to all accommodation contracts between L8 Street GmbH (“L8”) and guests. Business customer prices are net plus VAT and final cleaning. Potential communal stay taxes owed directly by the guest to the city.</li>
+  <li><strong>Contract:</strong> A contract is concluded when L8 confirms a booking in writing. Offers are non-binding. No entitlement to a specific apartment.</li>
+  <li><strong>Liability:</strong> ordering party and user are jointly and severally liable. L8 is only liable for intent or gross negligence. No liability for valuables. Damages may be compensated via flat rates where permissible. Proof of different damage remains possible.</li>
+  <li><strong>Payment:</strong> Prepayment by bank transfer. No Deposit.</li>
+  <li><strong>Cancellation (booking/extension):</strong> Via support@l8street.com up to 14 days before start (7 days if stay incl. extension is &lt;7 days). After that, 100% flat compensation per clause 3. The same applies to no-show.</li>
+  <li><strong>Unlimited Stay:</strong> From the second extension, the booking becomes unlimited with 14-day notice to the start of the next billing period. After that, 100% flat compensation per clause 3.</li>
+  <li><strong>House Rules:</strong> Check-in 16:00–21:00, check-out by 10:00. Quiet hours 21:00–07:00. No smoking, disturbances, or commercial use.</li>
+  <li><strong>Handover:</strong> Report defects within 24h of arrival. Access may be limited without payment or subject to surcharge.</li>
+  <li><strong>Internet:</strong> Included. Booker is liable and indemnifies L8 against third-party claims.</li>
+  <li><strong>Utilities:</strong> included. Excessive use (&gt;35 kWh/day, in summer &gt;10 kWh/day) additional flat-fee per clause 3.</li>
+  <li><strong>Final Cleaning:</strong> flat-fee in the amount of one nightly rate. Extra costs possible for heavy use (&gt;4h cleaning) per clause 3.</li>
+  <li><strong>Communication:</strong> Digital only (email, chat). Postal delivery only upon express request.</li>
+  <li><strong>Offsetting / Retention:</strong> Only if undisputed or legally established.</li>
+  <li><strong>Data Protection:</strong> See www.L8Street.com/datenschutz.</li>
+  <li><strong>Final Provisions:</strong> Place of jurisdiction is L8 Street GmbH's registered office (if permitted). German law applies. Side agreements must be in writing.</li>
+</ol>
+`;
+
+const DATENSCHUTZ_BODY = `
+<h1>DATENSCHUTZERKLÄRUNG</h1>
+<h2>I. WER IST FÜR DIE DATENVERARBEITUNG VERANTWORTLICH?</h2>
+<p>Verantwortlich im Sinne der Datenschutz-Grundverordnung und anderer nationaler Datenschutzgesetze der Mitgliedsstaaten sowie sonstiger datenschutzrechtlicher Bestimmungen ist die:</p>
+<p>L8 Street GmbH<br>Forststraße 65<br>75223 Niefern-Öschelbronn<br>Deutschland<br>Kontaktdaten:<br>E-Mail: datenschutz@L8Street.com</p>
+
+<h2>II. WELCHE DATEN VERARBEITEN WIR VON IHNEN?</h2>
+<p>Wir verarbeiten Ihre personenbezogenen Daten, wenn Sie eine unserer Unterkünfte buchen, uns Informationen über ein Kontaktformular auf unserer Webseite mitteilen oder auf andere Art und Weise mit uns in Kontakt treten. Im Einzelnen können dies folgende Daten sein:</p>
+<ul>
+  <li>Daten über Ihre bei der L8 Street GmbH gemieteten Unterkünfte</li>
+  <li>Daten, die für die Buchung einer unserer Unterkünfte benötigt werden (Rechnungsadresse, An- und Abreise, Mobilfunknummer, E-Mail-Adresse)</li>
+  <li>Daten zur Zahlungsabwicklung (Kreditkartendaten, Kontodaten und weitere Zahlungsinformationen)</li>
+  <li>Daten, die wir bei der Einlösung von Coupons erhalten (eingelöste Coupons, Datum und Ort der Einlösung)</li>
+  <li>Daten, die Sie generieren, wenn Sie Produkte in Ihren Warenkorb legen Daten, die Sie bei Rezensionen und Bewertungen von Produkten u.ä. abgeben</li>
+  <li>Daten, die bei der Nutzung unserer Webseite l8street.com durch die Verwendung von Cookies, (aufgerufene Seiten, angeklickte Links, genutzte Services, Zeitpunkt der Nutzung)</li>
+  <li>Daten zu Ihrem Standort (wenn Sie die Erfassung von Standortdaten in Ihren Geräteeinstellungen erlaubt haben)</li>
+  <li>Daten, die Sie uns bei der Bestellung des L8 Street-Newsletters mitteilen (u.a. E-Mail- Adresse, Anrede, Vorname, Nachname, Postleitzahl)</li>
+  <li>Daten, die wir zum Nachweis Ihrer Einwilligung in den Erhalt des L8 Street-Newsletters benötigen (IP-Adresse und Zeitstempel der Newsletterbestellung sowie des Klicks auf den Link in der Bestätigungs-E-Mail, abgegebene Einwilligungserklärungen)</li>
+  <li>Daten, die Sie uns über ein Webformular oder auf andere Weise zur Verfügung stellen, wenn Sie mit unserem Kundenservice in Kontakt treten</li>
+  <li>Daten, die Sie uns mitteilen, wenn Sie sich auf eine ausgeschriebene Stelle oder initiativ bei uns bewerben (persönliche Daten, Daten zur Ausbildung, Daten zum bisherigen beruflichen Werdegang, Anschreiben, Lebenslauf, Porträtfoto, Zeugnisse)</li>
+</ul>
+
+<h2>III. BESTEHT EINE PFLICHT ZUR BEREITSTELLUNG DER DATEN?</h2>
+<p>Die Bereitstellung Ihrer Daten ist gesetzlich nicht vorgeschrieben. Einige der genannten Daten sind jedoch erforderlich, um Werksverträge über unsere Dienstleistungen abschließen und durchführen zu können. Ohne die Mitteilung der zur Vertragsdurchführung benötigten Daten sind wir nicht in der Lage, mit Ihnen einen Vertrag über Dienstleistungen der L8 Street GmbH einzugehen.</p>
+
+<h2>IV. FÜR WELCHE ZWECKE VERARBEITEN WIR IHRE DATEN UND AUF WELCHER RECHTSGRUNDLAGE ERFOLGT DIES?</h2>
+<p><strong>Abwicklung von Bestellungen im Online-Shop</strong><br>
+Wir verarbeiten Ihre Daten für die Abwicklung von Buchungen in unserem Online-Shop. Dazu gehören die Bereitstellung von Dienstleistungen, Abwicklung von Zahlungen, Gewährung von Rabatten, Inanspruchnahme von Gutscheinen sowie Bearbeitung von Mängelansprüchen.</p>
+
+<p><strong>Nutzung des WhatsApp-Messenger Dienstes</strong><br>
+Sofern Sie uns über WhatsApp kontaktieren oder uns zur Kontaktaufnahme per WhatsApp ausdrücklich eingewilligt haben, kommunizieren wir mit Ihnen über den Messenger-Dienst WhatsApp. Die Nutzung von WhatsApp ist freiwillig; alternative Kommunikationswege (z.B. per E-Mail an support@L8Street.com) stehen jederzeit zur Verfügung.</p>
+
+<p><strong>Stand dieser Datenschutzerklärung:</strong> 01.01.2026</p>
+
+<hr style="margin: 2rem 0;">
+
+<h1>PRIVACY POLICY</h1>
+<p><strong>English Translation</strong></p>
+<h2>I. WHO IS RESPONSIBLE FOR DATA PROCESSING?</h2>
+<p>The controller within the meaning of the General Data Protection Regulation (Germany/ EU) and other national data protection laws of the member states is:</p>
+<p>L8 Street GmbH<br>Forststrasse 65<br>75223 Niefern-Oeschelbronn<br>Germany<br>Email: datenschutz@L8Street.com</p>
+`;
 
 async function buildSite() {
   console.log("Hole Daten aus Google Sheet...");
@@ -558,7 +709,6 @@ async function buildSite() {
       const images = parseImages(apt.images);
       const firstImg = optimizeImageUrl(images[0], 600);
 
-      // Erstes Bild mit Priorität laden (LCP Boost), alle folgenden Lazy
       const loadingAttr = index === 0 ? 'fetchpriority="high"' : 'loading="lazy"';
 
       let badgeHtml = '';
@@ -609,7 +759,6 @@ async function buildSite() {
         Voll ausgestattete Unterkünfte für Handwerker & Teams direkt in ${cityData.name} und Umgebung.
       </p>
 
-      <!-- GOOGLE ADS TRUST BADGES -->
       <div class="trust-badges">
         <div class="trust-item"><span>✓</span> <strong>Eigene Küche & Bad</strong> (Keine geteilten Bereiche)</div>
         <div class="trust-item"><span>✓</span> <strong>Kostenloses WLAN & Waschmaschine</strong></div>
@@ -669,7 +818,49 @@ async function buildSite() {
 
   fs.writeFileSync(path.join(process.cwd(), 'index.html'), homepageContent);
 
-  console.log("Startseite, Detailseiten und Stadtpages erfolgreich generiert!");
+  // ==========================================
+  // 4. EIGENE STATISCHE LEGAL-PAGES GENERIEREN (/agb/, /impressum/, /datenschutz/)
+  // ==========================================
+  const generateLegalPage = (folderName, titleStr, bodyHtml) => {
+    const legalDir = path.join(process.cwd(), folderName);
+    if (!fs.existsSync(legalDir)) {
+      fs.mkdirSync(legalDir, { recursive: true });
+    }
+    const fullHtml = `<!DOCTYPE html>
+<html lang="de" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${titleStr} | L8 Street</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css">
+  <style>
+    ${SHARED_CSS}
+    .legal-content { line-height: 1.6; }
+    .legal-content h1 { font-size: 1.8rem; margin-bottom: 1rem; border-bottom: 2px solid var(--pico-border-color); padding-bottom: 0.5rem; }
+    .legal-content h2 { font-size: 1.3rem; margin-top: 1.8rem; margin-bottom: 0.5rem; }
+    .legal-content p, .legal-content li { font-size: 0.95rem; color: var(--pico-color); }
+    .legal-content ol, .legal-content ul { padding-left: 1.2rem; }
+  </style>
+</head>
+<body>
+  ${HEADER_HTML}
+  <main class="container">
+    <button class="secondary outline" onclick="window.location.href='/'" style="width: auto; margin-bottom: 1.5rem;">← Zurück zur Startseite</button>
+    <article class="legal-content">
+      ${bodyHtml}
+    </article>
+  </main>
+  ${FOOTER_HTML}
+</body>
+</html>`;
+    fs.writeFileSync(path.join(legalDir, 'index.html'), fullHtml);
+  };
+
+  generateLegalPage('impressum', 'Impressum', IMPRESSUM_BODY);
+  generateLegalPage('agb', 'AGB - Allgemeine Geschäftsbedingungen', AGB_BODY);
+  generateLegalPage('datenschutz', 'Datenschutzerklärung', DATENSCHUTZ_BODY);
+
+  console.log("Startseite, Detailseiten, Stadtpages und Legal-Pages (AGB, Impressum, Datenschutz) erfolgreich generiert!");
 }
 
 buildSite();

@@ -3,8 +3,17 @@ const path = require('path');
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyMD7mGXRmW9IQFIK9gRLUBRWwprCudXEhfWEDDGk9iyvNe0yyK6w5gIuhLXZOFue8Z3w/exec";
 
+// Helper: Komprimiert Google-Usercontent Bild-URLs extrem für Mobilgeräte
+function optimizeImageUrl(url, width = 600) {
+  if (!url) return 'https://via.placeholder.com/600x400?text=Bild+nicht+verf%C3%BCgbar';
+  if (url.includes('googleusercontent.com') && !url.includes('=w')) {
+    return `${url}=w${width}-h400-c`;
+  }
+  return url;
+}
+
 // ==========================================
-// WIEDERVERWENDBARE BAUSTEINE (HEADER / FOOTER / CSS)
+// SHARED STYLES & LAYOUT COMPONENTS
 // ==========================================
 const SHARED_CSS = `
     :root { 
@@ -23,19 +32,20 @@ const SHARED_CSS = `
     }
 
     main.container {
-      max-width: 100vw !important;
+      max-width: 1200px !important;
       box-sizing: border-box !important;
-      padding-left: 10px !important;
-      padding-right: 10px !important;
+      padding-left: 15px !important;
+      padding-right: 15px !important;
       margin: 0 auto !important;
-      padding-top: 0.5rem !important;
-      padding-bottom: 1rem !important;
+      padding-top: 1.5rem !important;
+      padding-bottom: 2rem !important;
     }
 
     .catalog-grid { 
       display: grid; 
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
       gap: 1.5rem; 
+      margin-top: 1.5rem;
     }
 
     .cities-grid { 
@@ -76,6 +86,7 @@ const SHARED_CSS = `
       width: 100%; 
       height: 180px; 
       object-fit: cover; 
+      background-color: #f1f5f9;
     }
 
     .apt-card-content { 
@@ -136,6 +147,20 @@ const SHARED_CSS = `
     .badge-warning { background-color: #fef3c7 !important; color: #b45309 !important; }
     .badge-danger  { background-color: #fee2e2 !important; color: #991b1b !important; }
 
+    .trust-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 0.8rem;
+      font-size: 0.9rem;
+      color: var(--pico-muted-color);
+    }
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
     .hidden { display: none !important; }
 
     .lightbox-modal { 
@@ -163,14 +188,14 @@ const SHARED_CSS = `
 `;
 
 const HEADER_HTML = `
-  <header class="container" style="padding-top: 0.8rem; padding-bottom: 0.8rem;">
+  <header class="container" style="padding-top: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--pico-border-color);">
     <nav>
       <ul>
         <li><strong style="font-size: 1.75rem; cursor: pointer; font-weight: 700;" onclick="window.location.href='/'">L8 Street</strong></li>
       </ul>
       <ul>
         <li>
-          <a href="https://wa.me/4917684801295" target="_blank" style="text-decoration:none;">
+          <a href="https://wa.me/4917684801295" target="_blank" style="text-decoration:none; font-weight: 600;">
             <span>+49 176 8480 1295</span>
           </a>
         </li>
@@ -180,7 +205,7 @@ const HEADER_HTML = `
 `;
 
 const FOOTER_HTML = `
-  <footer class="container" style="margin-top: 3rem; border-top: 1px solid var(--pico-border-color); padding-top: 2rem; padding-bottom: 2rem;">
+  <footer class="container" style="margin-top: 4rem; border-top: 1px solid var(--pico-border-color); padding-top: 2rem; padding-bottom: 2rem;">
     <div class="grid">
       <div>
         <strong>Monteurwohnungen</strong><br>
@@ -240,7 +265,7 @@ async function buildSite() {
 
   console.log(`${apartments.length} Apartments gefunden.`);
 
-  console.log("Hole Verfügbarkeiten...");
+  console.log("Hole Verfügbarkeiten für Voraus-Sortierung...");
   const allIds = apartments.map(a => a.id).filter(Boolean);
   let availMap = {};
   try {
@@ -281,7 +306,9 @@ async function buildSite() {
 
     let galleryItemsHtml = '';
     images.slice(0, 5).forEach((imgUrl, index) => {
-      galleryItemsHtml += `<img src="${imgUrl}" class="gallery-grid-item" onclick="openLightbox(${index})" alt="${title}" loading="lazy" onerror="this.onerror=null;this.src='${placeholderImg}';">`;
+      const optUrl = optimizeImageUrl(imgUrl, 800);
+      const loadingAttr = index === 0 ? 'fetchpriority="high"' : 'loading="lazy"';
+      galleryItemsHtml += `<img src="${optUrl}" class="gallery-grid-item" onclick="openLightbox(${index})" alt="${title}" ${loadingAttr} onerror="this.onerror=null;this.src='${placeholderImg}';">`;
     });
 
     const htmlContent = `<!DOCTYPE html>
@@ -290,6 +317,7 @@ async function buildSite() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title} | L8 Street</title>
+  <meta name="description" content="${title} in ${fullAddress}. Voll ausgestattete Monteurwohnung mit eigenen Zimmern, Küche, Bad, WLAN & Waschmaschine. Jetzt direkt online buchen.">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css">
   <style>${SHARED_CSS}</style>
 </head>
@@ -298,7 +326,7 @@ async function buildSite() {
   ${HEADER_HTML}
 
   <main class="container">
-    <button class="secondary outline" onclick="window.location.href='/'" style="width: auto; margin-bottom: 1rem;">← Zurück zur Übersicht</button>
+    <button class="secondary outline" onclick="window.location.href='/'" style="width: auto; margin-bottom: 1.5rem;">← Zurück zur Übersicht</button>
 
     <article>
       <div id="detail-gallery-grid" class="gallery-grid">${galleryItemsHtml}</div>
@@ -505,7 +533,7 @@ async function buildSite() {
       fs.mkdirSync(cityDir, { recursive: true });
     }
 
-    // Sortierung (Grün > Gelb > Rot)
+    // Sortierung der Wohnungen (Grün > Gelb > Rot)
     cityData.list.sort((a, b) => {
       const infoA = availMap[a.id] || {};
       const infoB = availMap[b.id] || {};
@@ -516,7 +544,7 @@ async function buildSite() {
 
     let cardsHtml = '';
 
-    cityData.list.forEach(apt => {
+    cityData.list.forEach((apt, index) => {
       const title = apt.title || apt.Title || 'Monteurwohnung';
       const street = apt.street || apt.Street || '';
       const zip = apt.zip || apt.ZIP || '';
@@ -528,7 +556,10 @@ async function buildSite() {
       const aptId = apt.id || '';
 
       const images = parseImages(apt.images);
-      const firstImg = images[0];
+      const firstImg = optimizeImageUrl(images[0], 600);
+
+      // Erstes Bild mit Priorität laden (LCP Boost), alle folgenden Lazy
+      const loadingAttr = index === 0 ? 'fetchpriority="high"' : 'loading="lazy"';
 
       let badgeHtml = '';
       const info = availMap[aptId] || {};
@@ -542,7 +573,7 @@ async function buildSite() {
 
       cardsHtml += `
         <article class="apt-card">
-          <img src="${firstImg}" alt="${title}" loading="lazy" onerror="this.onerror=null;this.src='https://via.placeholder.com/600x400?text=Bild+nicht+verf%C3%BCgbar';">
+          <img src="${firstImg}" alt="${title}" ${loadingAttr} onerror="this.onerror=null;this.src='https://via.placeholder.com/600x400?text=Bild+nicht+verf%C3%BCgbar';">
           <div class="apt-card-content">
             <div>
               ${badgeHtml}
@@ -563,6 +594,7 @@ async function buildSite() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Monteurunterkünfte in ${cityData.name} | L8 Street</title>
+  <meta name="description" content="Monteurunterkünfte & Monteurwohnungen in ${cityData.name} mieten. Eigene Küche, Bad, WLAN & Waschmaschine inklusive. Jetzt Verfügbarkeit prüfen & buchen.">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css">
   <style>${SHARED_CSS}</style>
 </head>
@@ -571,7 +603,20 @@ async function buildSite() {
   ${HEADER_HTML}
 
   <main class="container">
-    <h1 style="margin-bottom: 1.5rem; font-size: 1.75rem; font-weight: 700;">Monteurwohnungen in ${cityData.name}</h1>
+    <div style="margin-bottom: 2rem;">
+      <h1 style="margin-bottom: 0.5rem; font-size: 2rem; font-weight: 700;">Monteurwohnungen in ${cityData.name}</h1>
+      <p style="color: var(--pico-muted-color); font-size: 1.05rem; margin-bottom: 0.8rem;">
+        Voll ausgestattete Unterkünfte für Handwerker & Teams direkt in ${cityData.name} und Umgebung.
+      </p>
+
+      <!-- GOOGLE ADS TRUST BADGES -->
+      <div class="trust-badges">
+        <div class="trust-item"><span>✓</span> <strong>Eigene Küche & Bad</strong> (Keine geteilten Bereiche)</div>
+        <div class="trust-item"><span>✓</span> <strong>Kostenloses WLAN & Waschmaschine</strong></div>
+        <div class="trust-item"><span>✓</span> <strong>Rechnung mit ausgewiesener MwSt.</strong></div>
+      </div>
+    </div>
+
     <div class="catalog-grid">${cardsHtml}</div>
   </main>
 
@@ -598,6 +643,7 @@ async function buildSite() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Monteurunterkünfte & Monteurwohnungen | L8 Street</title>
+  <meta name="description" content="Mieten Sie voll ausgestattete Monteurwohnungen & Monteurunterkünfte in über 20 Städten. Inklusive Küche, Bad, WLAN & Parkmöglichkeiten.">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css">
   <style>${SHARED_CSS}</style>
 </head>
@@ -606,9 +652,9 @@ async function buildSite() {
   ${HEADER_HTML}
 
   <main class="container">
-    <div style="text-align: center; margin-top: 1.5rem; margin-bottom: 2rem;">
-      <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">Monteurunterkünfte & Monteurwohnungen</h1>
-      <p style="color: var(--pico-muted-color); font-size: 1.1rem;">Wählen Sie Ihren Standort aus, um alle verfügbaren Wohnungen zu sehen:</p>
+    <div style="text-align: center; margin-top: 1rem; margin-bottom: 2rem;">
+      <h1 style="font-size: 2.2rem; font-weight: 700; margin-bottom: 0.5rem;">Monteurunterkünfte & Monteurwohnungen</h1>
+      <p style="color: var(--pico-muted-color); font-size: 1.15rem;">Wählen Sie Ihren Standort aus, um alle verfügbaren Wohnungen zu sehen:</p>
     </div>
 
     <div class="cities-grid">

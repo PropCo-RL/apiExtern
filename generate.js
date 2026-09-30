@@ -5,7 +5,7 @@ const { renderApartmentHtml } = require('./apartment_template');
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyMD7mGXRmW9IQFIK9gRLUBRWwprCudXEhfWEDDGk9iyvNe0yyK6w5gIuhLXZOFue8Z3w/exec";
 
-// Favicon per SVG Data-URI (Elegantes L8-Icon im Browser-Tab)
+// Favicon per SVG Data-URI
 const FAVICON_HTML = `<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23111827'/><text x='50' y='68' font-size='50' font-weight='bold' font-family='sans-serif' fill='white' text-anchor='middle'>L8</text></svg>">`;
 
 // KOORDINATEN-LOOKUP FÜR DIE MAP
@@ -108,6 +108,15 @@ function parseApartmentRegions(apt) {
   }
 
   return { mainRegion, regionList: parts };
+}
+
+function parseGermanDateStr(dateStr) {
+  if (!dateStr) return 9999999999999;
+  const parts = dateStr.split('.');
+  if (parts.length === 3) {
+    return new Date(parts[2], parts[1] - 1, parts[0]).getTime();
+  }
+  return 9999999999999;
 }
 
 async function buildSite() {
@@ -223,6 +232,7 @@ async function buildSite() {
       });
     }
 
+    // FEINJUSTIERTE SORTIERUNG INKL. DATUM-VERGLEICH
     regionData.list.sort((itemA, itemB) => {
       const aptA = itemA.apt;
       const aptB = itemB.apt;
@@ -233,6 +243,13 @@ async function buildSite() {
       const scoreB = infoB.isDirectlyAvailable ? 3 : (infoB.availableFromDate ? 2 : 1);
 
       if (scoreB !== scoreA) return scoreB - scoreA;
+
+      if (scoreA === 2 && scoreB === 2) {
+        const timeA = parseGermanDateStr(infoA.availableFromDate);
+        const timeB = parseGermanDateStr(infoB.availableFromDate);
+        if (timeA !== timeB) return timeA - timeB;
+      }
+
       if (itemA.distanceIndex !== itemB.distanceIndex) return itemA.distanceIndex - itemB.distanceIndex;
       return (aptA.ranking || 999) - (aptB.ranking || 999);
     });
@@ -423,8 +440,6 @@ async function buildSite() {
       markers.forEach(m => {
         const marker = L.marker(m.coords).addTo(map);
         marker.bindPopup('<strong>' + m.name + '</strong><br><a href="/' + m.key + '/">Wohnungen sehen →</a>');
-        
-        // Gera ausschließen aus der automatischen Zoom-Berechnung
         if (m.key !== 'gera') {
           boundsGroup.addLayer(marker);
         }

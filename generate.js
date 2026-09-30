@@ -232,7 +232,6 @@ async function buildSite() {
       });
     }
 
-    // FEINJUSTIERTE SORTIERUNG INKL. DATUM-VERGLEICH
     regionData.list.sort((itemA, itemB) => {
       const aptA = itemA.apt;
       const aptB = itemB.apt;
@@ -369,6 +368,7 @@ async function buildSite() {
   <meta name="description" content="Mieten Sie voll ausgestattete Monteurwohnungen & Monteurunterkünfte in über 20 Städten. Inklusive Küche, Bad, WLAN & Parkmöglichkeiten.">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     ${SHARED_CSS}
     .sub-region-btn {
@@ -398,11 +398,14 @@ async function buildSite() {
       background: var(--pico-card-background-color);
       display: flex;
       align-items: center;
-      gap: 0.8rem;
+      gap: 1rem;
     }
     .feature-icon {
-      font-size: 1.6rem;
-      line-height: 1;
+      width: 28px;
+      height: 28px;
+      stroke-width: 2;
+      color: var(--pico-primary);
+      flex-shrink: 0;
     }
   </style>
 </head>
@@ -428,6 +431,11 @@ async function buildSite() {
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function() {
+      // Lucide Vektor-Icons aktivieren
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+
       const markers = ${JSON.stringify(mapMarkers)};
       if (!markers || markers.length === 0) return;
 

@@ -8,6 +8,31 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyMD7mGXRmW9IQFIK9gRLUB
 // Favicon per SVG Data-URI (Elegantes L8-Icon im Browser-Tab)
 const FAVICON_HTML = `<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23111827'/><text x='50' y='68' font-size='50' font-weight='bold' font-family='sans-serif' fill='white' text-anchor='middle'>L8</text></svg>">`;
 
+// KOORDINATEN-LOOKUP FÜR DIE MAP
+const CITY_COORDS = {
+  'pforzheim': [48.8911, 8.7025],
+  'karlsruhe': [49.0069, 8.4037],
+  'stuttgart': [48.7758, 9.1829],
+  'mannheim': [49.4875, 8.4660],
+  'heilbronn': [49.1427, 9.2109],
+  'gera': [50.8811, 12.0833],
+  'goppingen': [48.7042, 9.6521],
+  'kaiserslautern': [49.4401, 7.7491],
+  'calw': [48.7153, 8.7410],
+  'besigheim': [48.9984, 9.1415],
+  'badwildbad': [48.7503, 8.5511],
+  'renningen': [48.7656, 8.9348],
+  'reutlingen': [48.4914, 9.2043],
+  'hosbach': [50.0033, 9.2056],
+  'muhlacker': [48.9482, 8.8410],
+  'monsheim': [48.8631, 8.8639],
+  'worms': [49.6353, 8.3598],
+  'ketsch': [49.3658, 8.5306],
+  'ladenburg': [49.4722, 8.6083],
+  'heimsheim': [48.8839, 8.8617],
+  'vaihingenanderenz': [48.9328, 8.9567]
+};
+
 // ==========================================
 // RESSOURCEN DIREKT EINLESEN
 // ==========================================
@@ -25,6 +50,13 @@ try {
   AGB_BODY = legalContent.split('<!-- AGB -->')[1]?.split('<!-- /AGB -->')[0] || legalContent;
   DATENSCHUTZ_BODY = legalContent.split('<!-- DATENSCHUTZ -->')[1]?.split('<!-- /DATENSCHUTZ -->')[0] || legalContent;
 } catch (e) { console.warn("legal.html nicht gefunden."); }
+
+let FEATURE_GRID_HTML = "", MAP_SECTION_HTML = "";
+try {
+  const contentFile = fs.readFileSync(path.join(__dirname, 'content.html'), 'utf8');
+  FEATURE_GRID_HTML = contentFile.split('<!-- FEATURE_GRID -->')[1]?.split('<!-- /FEATURE_GRID -->')[0] || '';
+  MAP_SECTION_HTML = contentFile.split('<!-- MAP_SECTION -->')[1]?.split('<!-- /MAP_SECTION -->')[0] || '';
+} catch (e) { console.warn("content.html nicht gefunden."); }
 
 // ==========================================
 // INTERNE HILFSFUNKTIONEN
@@ -58,6 +90,26 @@ function parseImages(rawImages) {
   return images;
 }
 
+function parseApartmentRegions(apt) {
+  const rawW = apt.regions || apt.city || "";
+  if (!rawW) return { mainRegion: "", regionList: [] };
+
+  let mainRegion = "";
+  const bracketMatch = rawW.match(/\(([^)]+)\)/);
+  if (bracketMatch) {
+    mainRegion = bracketMatch[1].trim();
+  }
+
+  const cleanStr = rawW.replace(/[()]/g, '');
+  const parts = cleanStr.split(',').map(s => s.trim()).filter(Boolean);
+
+  if (!mainRegion && parts.length > 0) {
+    mainRegion = parts[0];
+  }
+
+  return { mainRegion, regionList: parts };
+}
+
 async function buildSite() {
   console.log("Hole Daten aus Google Sheet...");
   const response = await fetch(`${API_URL}?action=getAllApartments`);
@@ -71,7 +123,6 @@ async function buildSite() {
   console.log(`${apartments.length} Apartments gefunden.`);
 
   console.log("Hole Verfügbarkeiten...");
-  // AUSSCHLIESSLICH internalTitle (Spalte A) abfragen
   const allInternalTitles = apartments.map(a => a.internalTitle).filter(Boolean);
   let availMap = {};
   try {
@@ -122,35 +173,77 @@ async function buildSite() {
     fs.writeFileSync(path.join(dir, 'index.html'), htmlContent);
   });
 
-  // 2. STÄDTE-LANDINGPAGES GENERIEREN (/gera/, /heilbronn/, etc.)
-  const citiesMap = {};
+  // 2. REGIONEN-LANDINGPAGES GENERIEREN
+  const regionsMap = {};
+  const clustersMap = {};
+  const mapMarkers = [];
+
   apartments.forEach(apt => {
-    const rawCity = apt.city || "";
-    if (!rawCity) return;
-    const cleanCityKey = rawCity.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
-    if (!citiesMap[cleanCityKey]) citiesMap[cleanCityKey] = { name: rawCity, list: [] };
-    citiesMap[cleanCityKey].list.push(apt);
+    const { mainRegion, regionList } = parseApartmentRegions(apt);
+    if (regionList.length === 0) return;
+
+    const cleanMainKey = mainRegion ? mainRegion.toLowerCase().trim().replace(/[^a-z0-9]/g, '') : '';
+
+    if (cleanMainKey && !clustersMap[cleanMainKey]) {
+      clustersMap[cleanMainKey] = {
+        mainName: mainRegion,
+        subRegions: new Map()
+      };
+    }
+
+    regionList.forEach((regName, idx) => {
+      const cleanKey = regName.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+      if (!cleanKey) return;
+
+      if (!regionsMap[cleanKey]) {
+        regionsMap[cleanKey] = { name: regName, list: [] };
+      }
+
+      regionsMap[cleanKey].list.push({
+        apt: apt,
+        distanceIndex: idx
+      });
+
+      if (cleanMainKey && cleanKey !== cleanMainKey) {
+        clustersMap[cleanMainKey].subRegions.set(cleanKey, regName);
+      }
+    });
   });
 
-  Object.keys(citiesMap).forEach(cityKey => {
-    const cityData = citiesMap[cityKey];
-    const cityDir = path.join(process.cwd(), cityKey);
-    if (!fs.existsSync(cityDir)) fs.mkdirSync(cityDir, { recursive: true });
+  Object.keys(regionsMap).forEach(regionKey => {
+    const regionData = regionsMap[regionKey];
+    const regionDir = path.join(process.cwd(), regionKey);
+    if (!fs.existsSync(regionDir)) fs.mkdirSync(regionDir, { recursive: true });
 
-    cityData.list.sort((a, b) => {
-      // AUSSCHLIESSLICH internalTitle prüfen
-      const infoA = availMap[a.internalTitle] || {};
-      const infoB = availMap[b.internalTitle] || {};
+    if (CITY_COORDS[regionKey]) {
+      mapMarkers.push({
+        name: regionData.name,
+        key: regionKey,
+        coords: CITY_COORDS[regionKey]
+      });
+    }
+
+    regionData.list.sort((itemA, itemB) => {
+      const aptA = itemA.apt;
+      const aptB = itemB.apt;
+      const infoA = availMap[aptA.internalTitle] || {};
+      const infoB = availMap[aptB.internalTitle] || {};
+
       const scoreA = infoA.isDirectlyAvailable ? 3 : (infoA.availableFromDate ? 2 : 1);
       const scoreB = infoB.isDirectlyAvailable ? 3 : (infoB.availableFromDate ? 2 : 1);
-      return scoreB - scoreA;
+
+      if (scoreB !== scoreA) return scoreB - scoreA;
+      if (itemA.distanceIndex !== itemB.distanceIndex) return itemA.distanceIndex - itemB.distanceIndex;
+      return (aptA.ranking || 999) - (aptB.ranking || 999);
     });
 
     let cardsHtml = '';
-    cityData.list.forEach((apt, index) => {
+    regionData.list.forEach((item, index) => {
+      const apt = item.apt;
       const title = apt.title || apt.Title || 'Monteurwohnung';
       const street = apt.street || apt.Street || '';
       const zip = apt.zip || apt.ZIP || '';
+      const city = apt.city || regionData.name;
       const bedrooms = apt.bedrooms || apt.Schlafzimmer || 1;
       const beds = apt.beds || apt.Betten || 1;
       const price = apt.pricePerNight || apt.Preis || '49';
@@ -162,7 +255,6 @@ async function buildSite() {
       const loadingAttr = index === 0 ? 'fetchpriority="high"' : 'loading="lazy"';
 
       let badgeHtml = '';
-      // AUSSCHLIESSLICH internalTitle prüfen
       const info = availMap[apt.internalTitle] || {};
       
       if (info.isDirectlyAvailable) {
@@ -180,7 +272,7 @@ async function buildSite() {
             <div>
               ${badgeHtml}
               <h4 style="margin-bottom:0.2rem;">${title}</h4>
-              <p style="font-size:0.8rem; color:var(--pico-muted-color); margin-bottom:0.5rem;">${street}, ${zip} ${cityData.name}</p>
+              <p style="font-size:0.8rem; color:var(--pico-muted-color); margin-bottom:0.5rem;">${street}, ${zip} ${city}</p>
             </div>
             <p style="font-size:0.85rem; margin:0.5rem 0;">${beds} Betten | ${bedrooms} Zimmer</p>
             <p style="font-weight:bold; margin-top:auto; margin-bottom:0.8rem;">ab ${price} € <small>/ Nacht</small></p>
@@ -195,9 +287,9 @@ async function buildSite() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Monteurwohnungen in ${cityData.name} | L8 Street</title>
+  <title>Monteurwohnungen in ${regionData.name} | L8 Street</title>
   ${FAVICON_HTML}
-  <meta name="description" content="Monteurunterkünfte & Monteurwohnungen in ${cityData.name} mieten. Eigene Küche, Bad, WLAN & Waschmaschine inklusive. Jetzt Verfügbarkeit prüfen & buchen.">
+  <meta name="description" content="Monteurunterkünfte & Monteurwohnungen in ${regionData.name} mieten. Eigene Küche, Bad, WLAN & Waschmaschine inklusive. Jetzt Verfügbarkeit prüfen & buchen.">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css">
   <style>${SHARED_CSS}</style>
 </head>
@@ -205,9 +297,9 @@ async function buildSite() {
   ${HEADER_HTML}
   <main class="container">
     <div style="margin-bottom: 2rem;">
-      <h1 style="margin-bottom: 0.5rem; font-size: 2rem; font-weight: 700;">Monteurwohnungen in ${cityData.name}</h1>
+      <h1 style="margin-bottom: 0.5rem; font-size: 2rem; font-weight: 700;">Monteurwohnungen in ${regionData.name}</h1>
       <p style="color: var(--pico-muted-color); font-size: 1.05rem; margin-bottom: 0.8rem;">
-        Voll ausgestattete Unterkünfte für Handwerker & Teams direkt in ${cityData.name} und Umgebung.
+        Voll ausgestattete Unterkünfte für Handwerker & Teams direkt in ${regionData.name} und Umgebung.
       </p>
       <div class="trust-badges">
         <div class="trust-item"><span>✓</span> <strong>Eigene Küche & Bad</strong> (Keine geteilten Bereiche)</div>
@@ -221,14 +313,33 @@ async function buildSite() {
 </body>
 </html>`;
 
-    fs.writeFileSync(path.join(cityDir, 'index.html'), cityHtmlContent);
+    fs.writeFileSync(path.join(regionDir, 'index.html'), cityHtmlContent);
   });
 
   // 3. HAUPT-STARTSEITE GENERIEREN (/index.html)
-  let cityCardsHtml = '';
-  Object.keys(citiesMap).sort().forEach(key => {
-    const c = citiesMap[key];
-    cityCardsHtml += `<a href="/${key}/" class="city-card">${c.name}</a>\n`;
+  let homepageClustersHtml = '';
+  Object.keys(clustersMap).sort().forEach(mainKey => {
+    const cluster = clustersMap[mainKey];
+    
+    let subBtnsHtml = '';
+    cluster.subRegions.forEach((subName, subKey) => {
+      subBtnsHtml += `<a href="/${subKey}/" class="sub-region-btn">📍 ${subName}</a>\n`;
+    });
+
+    homepageClustersHtml += `
+      <div class="cluster-card" style="border: 1px solid var(--pico-border-color); border-radius: 12px; padding: 1.2rem; margin-bottom: 1.2rem; background: var(--pico-card-background-color);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
+          <a href="/${mainKey}/" style="font-size: 1.3rem; font-weight: 700; text-decoration: none; color: var(--pico-color);">Monteurwohnungen ${cluster.mainName} & Umgebung</a>
+          <a href="/${mainKey}/" role="button" class="outline" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; width: auto;">Alle anzeigen →</a>
+        </div>
+        ${subBtnsHtml ? `
+          <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.8rem;">
+            <span style="font-size:0.8rem; color:var(--pico-muted-color); font-weight:600;">Umkreis:</span>
+            ${subBtnsHtml}
+          </div>
+        ` : ''}
+      </div>
+    `;
   });
 
   const homepageContent = `<!DOCTYPE html>
@@ -240,26 +351,96 @@ async function buildSite() {
   ${FAVICON_HTML}
   <meta name="description" content="Mieten Sie voll ausgestattete Monteurwohnungen & Monteurunterkünfte in über 20 Städten. Inklusive Küche, Bad, WLAN & Parkmöglichkeiten.">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css">
-  <style>${SHARED_CSS}</style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    ${SHARED_CSS}
+    .sub-region-btn {
+      font-size: 0.82rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 20px;
+      border: 1px solid var(--pico-border-color);
+      text-decoration: none;
+      color: var(--pico-muted-color);
+      background: var(--pico-background-color);
+      transition: all 0.2s ease;
+    }
+    .sub-region-btn:hover {
+      border-color: var(--pico-primary);
+      color: var(--pico-primary);
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+    .feature-box {
+      border: 1px solid var(--pico-border-color);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      background: var(--pico-card-background-color);
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    .feature-icon {
+      font-size: 1.6rem;
+      line-height: 1;
+    }
+  </style>
 </head>
 <body>
   ${HEADER_HTML}
   <main class="container">
     <div style="text-align: center; margin-top: 1rem; margin-bottom: 2rem;">
       <h1 style="font-size: 2.2rem; font-weight: 700; margin-bottom: 0.5rem;">Monteurunterkünfte & Monteurwohnungen</h1>
-      <p style="color: var(--pico-muted-color); font-size: 1.15rem;">Wählen Sie Ihren Standort aus, um alle verfügbaren Wohnungen zu sehen:</p>
+      <p style="color: var(--pico-muted-color); font-size: 1.15rem;">Voll ausgestattete Apartments für Firmen, Handwerker & Teams direkt buchen.</p>
     </div>
-    <div class="cities-grid">
-      ${cityCardsHtml}
+
+    ${FEATURE_GRID_HTML}
+
+    ${MAP_SECTION_HTML}
+
+    <h3 style="margin-bottom: 1rem;">Standort auswählen:</h3>
+    <div class="clusters-container">
+      ${homepageClustersHtml}
     </div>
   </main>
   ${FOOTER_HTML}
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const markers = ${JSON.stringify(mapMarkers)};
+      if (!markers || markers.length === 0) return;
+
+      const map = L.map('overview-map').setView([48.9, 8.8], 8);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(map);
+
+      const boundsGroup = new L.featureGroup();
+      markers.forEach(m => {
+        const marker = L.marker(m.coords).addTo(map);
+        marker.bindPopup('<strong>' + m.name + '</strong><br><a href="/' + m.key + '/">Wohnungen sehen →</a>');
+        
+        // Gera ausschließen aus der automatischen Zoom-Berechnung
+        if (m.key !== 'gera') {
+          boundsGroup.addLayer(marker);
+        }
+      });
+
+      if (boundsGroup.getLayers().length > 0) {
+        map.fitBounds(boundsGroup.getBounds().pad(0.1));
+      }
+    });
+  </script>
 </body>
 </html>`;
 
   fs.writeFileSync(path.join(process.cwd(), 'index.html'), homepageContent);
 
-  // 4. STATISCHE LEGAL-PAGES GENERIEREN (/agb/, /impressum/, /datenschutz/)
+  // 4. STATISCHE LEGAL-PAGES GENERIEREN
   const generateLegalPage = (folderName, titleStr, bodyHtml) => {
     const legalDir = path.join(process.cwd(), folderName);
     if (!fs.existsSync(legalDir)) fs.mkdirSync(legalDir, { recursive: true });

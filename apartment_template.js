@@ -152,16 +152,31 @@ function renderApartmentHtml({
   <script>
     const API_URL = "${API_URL}";
     const currentGalleryImages = ${JSON.stringify(images)};
-    let currentImageIndex = 0; let currentStep = 1;
+    let currentImageIndex = 0; 
+    let currentStep = 1;
 
     function smartBack() {
-      if (document.referrer && document.referrer.includes(window.location.host)) { window.history.back(); } else { window.location.href = '/'; }
+      if (document.referrer && document.referrer.includes(window.location.host)) { 
+        window.history.back(); 
+      } else { 
+        window.location.href = '/'; 
+      }
     }
+
+    function formatDateForInput(dateObj) {
+      const year = dateObj.getFullYear(); 
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0'); 
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      return year + '-' + month + '-' + day;
+    }
+
     window.onload = function() {
-      const today = new Date(); const nextWeek = new Date(today.getTime() + 7*24*60*60*1000);
+      const today = new Date(); 
+      const nextWeek = new Date(today.getTime() + 7*24*60*60*1000);
       document.getElementById('form-start').value = formatDateForInput(today);
       document.getElementById('form-end').value = formatDateForInput(nextWeek);
     };
+
     function goToStep(stepNum) {
       document.getElementById('step-1').classList.add('hidden');
       document.getElementById('step-2').classList.add('hidden');
@@ -175,8 +190,19 @@ function renderApartmentHtml({
       }
       currentStep = stepNum;
     }
-    function openLightbox(index) { currentImageIndex = index; if (currentGalleryImages.length > 0) { document.getElementById('lightboxImg').src = currentGalleryImages[currentImageIndex]; document.getElementById('lightboxModal').style.display = 'flex'; } }
-    function closeLightbox() { document.getElementById('lightboxModal').style.display = 'none'; }
+
+    function openLightbox(index) { 
+      currentImageIndex = index; 
+      if (currentGalleryImages.length > 0) { 
+        document.getElementById('lightboxImg').src = currentGalleryImages[currentImageIndex]; 
+        document.getElementById('lightboxModal').style.display = 'flex'; 
+      } 
+    }
+
+    function closeLightbox() { 
+      document.getElementById('lightboxModal').style.display = 'none'; 
+    }
+
     function changeLightboxImg(step) {
       if (currentGalleryImages.length === 0) return;
       currentImageIndex += step;
@@ -231,28 +257,22 @@ function renderApartmentHtml({
         userAgent: navigator.userAgent
       };
 
-      fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) })
-        .then(res => res.json())
-        .then(res => {
-          if (res.success) { 
-            msgEl.innerText = "Buchung erfolgreich & rechtssicher erfasst!"; 
-            msgEl.style.color = "var(--pico-ins-color)"; 
-            document.getElementById('booking-form').reset(); 
-            goToStep(1); 
-          } else { 
-            msgEl.innerText = res.message || "Fehler bei der Buchung."; 
-            msgEl.style.color = "var(--pico-del-color)"; 
-          }
-        })
-        .catch(err => {
-            msgEl.innerText = "Verbindungsfehler. Bitte später erneut versuchen.";
-            msgEl.style.color = "var(--pico-del-color)";
-        });
-    }
-
-    function formatDateForInput(dateObj) {
-      const year = dateObj.getFullYear(); const month = String(dateObj.getMonth() + 1).padStart(2, '0'); const day = String(dateObj.getDate()).padStart(2, '0');
-      return \`\${year}-\${month}-\${day}\`;
+      try {
+        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const resData = await res.json();
+        if (resData.success) { 
+          msgEl.innerText = "Buchung erfolgreich & rechtssicher erfasst!"; 
+          msgEl.style.color = "var(--pico-ins-color)"; 
+          document.getElementById('booking-form').reset(); 
+          goToStep(1); 
+        } else { 
+          msgEl.innerText = resData.message || "Fehler bei der Buchung."; 
+          msgEl.style.color = "var(--pico-del-color)"; 
+        }
+      } catch (err) {
+        msgEl.innerText = "Verbindungsfehler. Bitte später erneut versuchen.";
+        msgEl.style.color = "var(--pico-del-color)";
+      }
     }
   </script>
 </body>

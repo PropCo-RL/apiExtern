@@ -51,11 +51,12 @@ try {
   DATENSCHUTZ_BODY = legalContent.split('<!-- DATENSCHUTZ -->')[1]?.split('<!-- /DATENSCHUTZ -->')[0] || legalContent;
 } catch (e) { console.warn("legal.html nicht gefunden."); }
 
-let FEATURE_GRID_HTML = "", MAP_SECTION_HTML = "";
+let FEATURE_GRID_HTML = "", MAP_SECTION_HTML = "", REVIEWS_SECTION_HTML = "";
 try {
   const contentFile = fs.readFileSync(path.join(__dirname, 'content.html'), 'utf8');
   FEATURE_GRID_HTML = contentFile.split('<!-- FEATURE_GRID -->')[1]?.split('<!-- /FEATURE_GRID -->')[0] || '';
   MAP_SECTION_HTML = contentFile.split('<!-- MAP_SECTION -->')[1]?.split('<!-- /MAP_SECTION -->')[0] || '';
+  REVIEWS_SECTION_HTML = contentFile.split('<!-- REVIEWS_SECTION -->')[1]?.split('<!-- /REVIEWS_SECTION -->')[0] || '';
 } catch (e) { console.warn("content.html nicht gefunden."); }
 
 // ==========================================
@@ -155,9 +156,12 @@ async function buildSite() {
 
     const title = apt.title || apt.Title || 'Monteurwohnung';
     const city = apt.city || '';
-    const street = apt.street || apt.Street || '';
-    const zip = apt.zip || apt.ZIP || '';
-    const fullAddress = `${street}${street ? ', ' : ''}${zip} ${city}`.trim();
+    
+    // ANONYMISIERUNG FÜR DETAILSEITE (Falls Spalte AG = 'x')
+    const fullAddress = apt.isAnonymous 
+      ? `${city} <br><small style="color:var(--pico-muted-color);">🔒 Genaue Adresse erhalten Sie automatisch nach der Buchung.</small>`
+      : apt.displayAddress;
+
     const bedrooms = apt.bedrooms || apt.Schlafzimmer || 4;
     const beds = apt.beds || apt.Betten || 8;
     const price = apt.pricePerNight || apt.Preis || '49';
@@ -257,14 +261,16 @@ async function buildSite() {
     regionData.list.forEach((item, index) => {
       const apt = item.apt;
       const title = apt.title || apt.Title || 'Monteurwohnung';
-      const street = apt.street || apt.Street || '';
-      const zip = apt.zip || apt.ZIP || '';
-      const city = apt.city || regionData.name;
       const bedrooms = apt.bedrooms || apt.Schlafzimmer || 1;
       const beds = apt.beds || apt.Betten || 1;
       const price = apt.pricePerNight || apt.Preis || '49';
       const rawPath = apt.Apartment || apt.apartmentPath || apt.apartment || '';
       const cleanPath = rawPath.toString().replace(/^\/+|\/+$/g, '').trim();
+
+      // ANONYMISIERUNG AUF DER KARTEN-LISTE
+      const addressDisplay = apt.isAnonymous 
+        ? `${apt.city || regionData.name} <br><small style="color:var(--pico-muted-color);">🔒 Genaue Adresse nach Buchung</small>`
+        : apt.displayAddress;
 
       const images = parseImages(apt.images);
       const firstImg = optimizeImageUrl(images[0], 600);
@@ -288,7 +294,7 @@ async function buildSite() {
             <div>
               ${badgeHtml}
               <h4 style="margin-bottom:0.2rem;">${title}</h4>
-              <p style="font-size:0.8rem; color:var(--pico-muted-color); margin-bottom:0.5rem;">${street}, ${zip} ${city}</p>
+              <p style="font-size:0.8rem; color:var(--pico-muted-color); margin-bottom:0.5rem;">${addressDisplay}</p>
             </div>
             <p style="font-size:0.85rem; margin:0.5rem 0;">${beds} Betten | ${bedrooms} Zimmer</p>
             <p style="font-weight:bold; margin-top:auto; margin-bottom:0.8rem;">ab ${price} € <small>/ Nacht</small></p>
@@ -419,6 +425,8 @@ async function buildSite() {
 
     ${FEATURE_GRID_HTML}
 
+    ${REVIEWS_SECTION_HTML}
+
     ${MAP_SECTION_HTML}
 
     <h3 style="margin-bottom: 1rem;">Standort auswählen:</h3>
@@ -431,7 +439,6 @@ async function buildSite() {
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function() {
-      // Lucide Vektor-Icons aktivieren
       if (typeof lucide !== 'undefined') {
         lucide.createIcons();
       }

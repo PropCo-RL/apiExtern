@@ -1,277 +1,155 @@
-function renderApartmentHtml({
-  title,
-  fullAddress,
-  bedrooms,
-  beds,
-  price,
-  description,
-  aptCode,
-  galleryItemsHtml,
-  images,
-  SHARED_CSS,
-  HEADER_HTML,
-  FOOTER_HTML,
-  API_URL,
-  FAVICON_HTML
-}) {
-  const cleanAddressText = fullAddress ? fullAddress.split('<br>')[0].replace(/<[^>]*>/g, '').trim() : title;
+function renderApartmentHtml(data) {
+  const {
+    title, fullAddress, bedrooms, beds, price, description, aptCode,
+    galleryItemsHtml, images, SHARED_CSS, HEADER_HTML, FOOTER_HTML, API_URL, FAVICON_HTML
+  } = data;
 
   return `<!DOCTYPE html>
 <html lang="de" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title} | L8 Street</title>
-  ${FAVICON_HTML || ''}
-  <meta name="description" content="${title} in ${cleanAddressText}. Voll ausgestattete Monteurwohnung mit eigenen Zimmern, Küche, Bad, WLAN & Waschmaschine. Jetzt direkt online buchen.">
+  <title>${title} mieten | L8 Street</title>
+  ${FAVICON_HTML}
+  <meta name="description" content="${title} in ${fullAddress.replace(/<[^>]*>/g, '')}. Buchen Sie direkt ohne Aufschlag. Betten: ${beds}, Zimmer: ${bedrooms}.">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css">
-  <style>${SHARED_CSS}</style>
+  <style>
+    ${SHARED_CSS}
+  </style>
 </head>
 <body>
-
   ${HEADER_HTML}
 
   <main class="container">
-    <button class="secondary outline" onclick="smartBack()" style="width: auto; margin-bottom: 1.5rem;">← Zurück zur Übersicht</button>
+    <button class="secondary outline" onclick="window.history.back()" style="width: auto; margin-bottom: 1rem;">← Zurück zur Übersicht</button>
 
-    <article>
-      <div id="detail-gallery-grid" class="gallery-grid">${galleryItemsHtml}</div>
+    <div class="gallery-grid">
+      ${galleryItemsHtml}
+    </div>
 
-      <h2 style="margin-bottom: 0.2rem; margin-top: 1rem;">${title}</h2>
-      <p style="color: var(--pico-muted-color); font-size: 0.95rem; margin-bottom: 1.5rem;">${fullAddress}</p>
+    <div class="grid">
+      <div>
+        <h1 style="margin-bottom: 0.2rem;">${title}</h1>
+        <p style="color: var(--pico-muted-color); font-size: 1rem; margin-bottom: 1.5rem;">${fullAddress}</p>
 
-      <div class="detail-grid-container">
-        <div>
-          <p><strong>Gesamte Monteurwohnung mit eigener Küche und eigenem Badezimmer (keine geteilten Bereiche).</strong></p>
-          <div style="margin: 1rem 0;">
-            <p style="margin-bottom: 0.2rem;"><strong>Schlafzimmer:</strong> <span>${bedrooms}</span></p>
-            <p style="margin-bottom: 0.2rem;"><strong>Einzelbetten:</strong> <span>${beds}</span></p>
+        <article style="padding: 1.2rem; margin-bottom: 1.5rem;">
+          <p style="margin: 0; font-size: 1rem; line-height: 1.5;">${description || 'Gesamte Monteurwohnung mit eigener Küche und eigenem Badezimmer (keine geteilten Bereiche).'}</p>
+          <hr style="margin: 1rem 0;">
+          <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+            <div><strong>Schlafzimmer:</strong> ${bedrooms}</div>
+            <div><strong>Einzelbetten:</strong> ${beds}</div>
+            <div><strong>WLAN:</strong> Inklusive</div>
+            <div><strong>Parkplatz:</strong> Inklusive</div>
           </div>
-          <p style="margin-bottom: 0.5rem;"><strong>Ausstattung:</strong></p>
-          <ul style="padding-left: 1.2rem; margin-bottom: 1.5rem;">
-            <li>2 Einzelbetten pro Schlafzimmer</li>
-            <li>Voll ausgestattete Küche</li>
-            <li>Eigenes Badezimmer</li>
-            <li>Smart TV (via WLAN)</li>
-            <li>WLAN (50mb/s) kostenfrei inklusive</li>
-            <li>Waschmaschine kostenfrei inklusive</li>
-            <li>Parkmöglichkeiten vorhanden</li>
-          </ul>
-          <p style="color: var(--pico-muted-color); font-size: 0.95rem;">${description}</p>
-        </div>
-
-        <div>
-          <article style="background: var(--pico-card-background-color); border: 1px solid var(--pico-border-color); padding: 1.2rem; border-radius: 12px;">
-            <h3 style="margin-bottom: 0.2rem; color: var(--pico-primary);">${price} € pro Nacht</h3>
-            <p style="font-size: 0.8rem; color: var(--pico-muted-color); margin-bottom: 1rem;">gesamt für alle Personen<br><small>(unabhängig von Anzahl der Personen)</small></p>
-            <hr style="margin: 1rem 0;">
-            <strong>Kontakt</strong><br>
-            <small>E-Mail: support@L8Street.com</small><br>
-            <small>Telefon: <a href="https://wa.me/4917684801295" style="text-decoration:none;">+49 176 8480 1295</a></small>
-          </article>
-        </div>
+        </article>
       </div>
 
-      <hr style="margin: 2rem 0;">
-
-      <h3>Apartment buchen</h3>
-      
-      <div class="step-indicator">
-        <div class="step-item active" id="step-tab-1"><div class="step-number">1</div><span>Reisedaten</span></div>
-        <div class="step-item" id="step-tab-2"><div class="step-number">2</div><span>Kontaktdaten</span></div>
-        <div class="step-item" id="step-tab-3"><div class="step-number">3</div><span>Rechnung</span></div>
-      </div>
-
-      <form id="booking-form" onsubmit="handleBookingSubmit(event)">
-        <input type="hidden" id="form-apt-title" value="${title}">
-        <input type="hidden" id="form-apt-code" value="${aptCode}">
-
-        <div id="step-1">
-          <div class="grid">
-            <div><label for="form-start">Anreise</label><input type="date" id="form-start" required></div>
-            <div><label for="form-end">Abreise</label><input type="date" id="form-end" required></div>
+      <div>
+        <article style="position: sticky; top: 1rem; padding: 1.5rem; border-radius: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1rem;">
+            <h3 style="margin: 0; font-size: 1.8rem; color: var(--pico-primary);">${price} € <small style="font-size: 0.9rem; font-weight: normal;">pro Nacht</small></h3>
+            <span style="font-size: 0.8rem; color: var(--pico-muted-color);">gesamt für alle Personen</span>
           </div>
-          <div class="grid">
-            <div><label for="form-guests">Anzahl der Personen</label><input type="number" id="form-guests" value="4" min="1" required></div>
-            <div>
-              <label for="form-billing-cycle">Abrechnungszyklus</label>
-              <select id="form-billing-cycle" required>
-                <option value="14-taegig" selected>14-tägige Abrechnung</option>
-                <option value="woechentlich">Wöchentliche Abrechnung</option>
-                <option value="monatlich">Monatliche Abrechnung</option>
-                <option value="gesamt">Gesamtzahlung bei Anreise</option>
+
+          <form id="bookingForm" onsubmit="handleBookingSubmit(event)">
+            <input type="hidden" name="apartment" value="${aptCode}">
+            
+            <label for="startDate">Anreise
+              <input type="date" id="startDate" name="startDate" required onchange="calculatePrice()">
+            </label>
+
+            <label for="endDate">Abreise
+              <input type="date" id="endDate" name="endDate" required onchange="calculatePrice()">
+            </label>
+
+            <label for="guests">Anzahl Personen
+              <select id="guests" name="guests" required>
+                ${Array.from({length: beds}, (_, i) => `<option value="${i+1}">${i+1} Personen</option>`).join('')}
               </select>
-            </div>
-          </div>
-          <div class="step-buttons"><div></div><button type="button" onclick="goToStep(2)" style="width: auto;">Weiter zu Kontaktdaten →</button></div>
-        </div>
+            </label>
 
-        <div id="step-2" class="hidden">
-          <label for="form-company">Firma / Unternehmensname</label>
-          <input type="text" id="form-company" placeholder="z. B. Muster Bau GmbH" required>
-          <div class="grid">
-            <div><label for="form-vatid">Umsatzsteuer-ID (USt-ID)</label><input type="text" id="form-vatid" placeholder="DE123456789"></div>
-            <div><label for="form-ref">Referenznummer <small>(optional)</small></label><input type="text" id="form-ref" placeholder="z. B. Projekt 2026-B"></div>
-          </div>
-          <div class="grid">
-            <div><label for="form-email">E-Mail-Adresse (für Rechnungen)</label><input type="email" id="form-email" placeholder="name@firma.de" required></div>
-            <div><label for="form-phone">Telefon / WhatsApp</label><input type="text" id="form-phone" placeholder="+49 170 1234567" required></div>
-          </div>
-          <div class="step-buttons"><button type="button" class="secondary outline" onclick="goToStep(1)" style="width: auto;">← Zurück</button><button type="button" onclick="goToStep(3)" style="width: auto;">Weiter zu Rechnungsanschrift →</button></div>
-        </div>
+            <label for="company">Firmenname
+              <input type="text" id="company" name="company" placeholder="z.B. Bau GmbH" required>
+            </label>
 
-        <div id="step-3" class="hidden">
-          <fieldset style="margin-bottom: 1rem;">
-            <legend><strong>Rechnungsanschrift</strong></legend>
-            <div class="grid"><div style="grid-column: span 2;"><label for="form-street">Straße & Hausnummer</label><input type="text" id="form-street" placeholder="Musterstraße 12" required></div></div>
-            <div class="grid">
-              <div><label for="form-zip">PLZ</label><input type="text" id="form-zip" placeholder="75175" required></div>
-              <div><label for="form-city">Ort</label><input type="text" id="form-city" placeholder="Pforzheim" required></div>
-            </div>
-            <label for="form-country">Land</label><input type="text" id="form-country" value="Deutschland" required>
-          </fieldset>
-          <blockquote style="margin: 1.5rem 0; font-size: 0.85rem;"><strong>Wichtiger Hinweis zu Stornierungen:</strong> Kostenfreie Stornierung per E-Mail bis 14 Tage vor Anreise. Bei späterer Stornierung oder Nichtanreise (No-Show) fallen 100% Stornogebühren an.</blockquote>
-          <fieldset>
-            <label for="form-agb"><input type="checkbox" id="form-agb" required> Ich akzeptiere die <a href="/agb/" target="_blank">AGB</a> sowie die <a href="/datenschutz/" target="_blank">Datenschutzerklärung</a>.</label>
-          </fieldset>
-          <div class="step-buttons"><button type="button" class="secondary outline" onclick="goToStep(2)" style="width: auto;">← Zurück</button><button type="submit" style="width: auto;">Jetzt verbindlich buchen</button></div>
-        </div>
-      </form>
-      <p id="form-msg" style="text-align: center; font-weight: bold; margin-top: 1rem;"></p>
-    </article>
+            <label for="name">Ansprechpartner
+              <input type="text" id="name" name="name" placeholder="Vor- und Nachname" required>
+            </label>
+
+            <label for="phone">Telefonnummer
+              <input type="tel" id="phone" name="phone" placeholder="+49 123 456789" required>
+            </label>
+
+            <label for="email">E-Mail
+              <input type="email" id="email" name="email" placeholder="name@firma.de" required>
+            </label>
+
+            <button type="submit" id="submitBtn" style="width: 100%; margin-top: 1rem;">Verbindlich Anfragen</button>
+          </form>
+          <div id="bookingResult" style="margin-top: 1rem;"></div>
+        </article>
+      </div>
+    </div>
   </main>
+
+  <div id="lightbox" class="lightbox-modal">
+    <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+    <img id="lightboxImg" src="" alt="Großansicht">
+    <div class="lightbox-controls">
+      <button class="lightbox-btn" onclick="changeLightboxImg(-1)">← Vorheriges</button>
+      <button class="lightbox-btn" onclick="changeLightboxImg(1)">Nächstes →</button>
+    </div>
+  </div>
 
   ${FOOTER_HTML}
 
-  <div id="lightboxModal" class="lightbox-modal">
-    <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
-    <img id="lightboxImg" src="" alt="Großansicht">
-    <div class="lightbox-controls"><button class="lightbox-btn" onclick="changeLightboxImg(-1)">← Vorheriges</button><button class="lightbox-btn" onclick="changeLightboxImg(1)">Nächstes →</button></div>
-  </div>
-
   <script>
-    const API_URL = "${API_URL}";
-    const currentGalleryImages = ${JSON.stringify(images)};
-    let currentImageIndex = 0; 
-    let currentStep = 1;
+    const imagesList = ${JSON.stringify(images)};
+    let currentImgIdx = 0;
 
-    function smartBack() {
-      if (document.referrer && document.referrer.includes(window.location.host)) { 
-        window.history.back(); 
-      } else { 
-        window.location.href = '/'; 
-      }
+    function openLightbox(idx) {
+      currentImgIdx = idx;
+      document.getElementById('lightboxImg').src = imagesList[currentImgIdx];
+      document.getElementById('lightbox').style.display = 'flex';
     }
 
-    function formatDateForInput(dateObj) {
-      const year = dateObj.getFullYear(); 
-      const month = String(dateObj.getMonth() + 1).padStart(2, '0'); 
-      const day = String(dateObj.getDate()).padStart(2, '0');
-      return year + '-' + month + '-' + day;
+    function closeLightbox() {
+      document.getElementById('lightbox').style.display = 'none';
     }
 
-    window.onload = function() {
-      const today = new Date(); 
-      const nextWeek = new Date(today.getTime() + 7*24*60*60*1000);
-      document.getElementById('form-start').value = formatDateForInput(today);
-      document.getElementById('form-end').value = formatDateForInput(nextWeek);
-    };
-
-    function goToStep(stepNum) {
-      document.getElementById('step-1').classList.add('hidden');
-      document.getElementById('step-2').classList.add('hidden');
-      document.getElementById('step-3').classList.add('hidden');
-      document.getElementById('step-' + stepNum).classList.remove('hidden');
-      for (let i = 1; i <= 3; i++) {
-        const tab = document.getElementById('step-tab-' + i);
-        tab.classList.remove('active', 'completed');
-        if (i < stepNum) tab.classList.add('completed');
-        if (i === stepNum) tab.classList.add('active');
-      }
-      currentStep = stepNum;
-    }
-
-    function openLightbox(index) { 
-      currentImageIndex = index; 
-      if (currentGalleryImages.length > 0) { 
-        document.getElementById('lightboxImg').src = currentGalleryImages[currentImageIndex]; 
-        document.getElementById('lightboxModal').style.display = 'flex'; 
-      } 
-    }
-
-    function closeLightbox() { 
-      document.getElementById('lightboxModal').style.display = 'none'; 
-    }
-
-    function changeLightboxImg(step) {
-      if (currentGalleryImages.length === 0) return;
-      currentImageIndex += step;
-      if (currentImageIndex < 0) currentImageIndex = currentGalleryImages.length - 1;
-      if (currentImageIndex >= currentGalleryImages.length) currentImageIndex = 0;
-      document.getElementById('lightboxImg').src = currentGalleryImages[currentImageIndex];
+    function changeLightboxImg(dir) {
+      currentImgIdx = (currentImgIdx + dir + imagesList.length) % imagesList.length;
+      document.getElementById('lightboxImg').src = imagesList[currentImgIdx];
     }
 
     async function handleBookingSubmit(e) {
       e.preventDefault();
-      const msgEl = document.getElementById('form-msg'); 
-      msgEl.innerText = "Sichere Verbindung aufbauen & Buchung verarbeiten..."; 
-      msgEl.style.color = "var(--pico-primary)";
+      const btn = document.getElementById('submitBtn');
+      const res = document.getElementById('bookingResult');
+      btn.disabled = true;
+      btn.innerText = 'Wird gesendet...';
 
-      let clientIp = "IP_konnte_nicht_ermittelt_werden";
-      try {
-        const ipRes = await fetch('https://api.ipify.org?format=json');
-        const ipData = await ipRes.json();
-        clientIp = ipData.ip;
-      } catch (err) {
-        console.warn("IP-Abruf fehlgeschlagen", err);
-      }
-
-      const timestampUTC = new Date().toISOString();
-      const bookingId = 'BK-SITE-' + Math.floor(100000 + Math.random() * 900000);
-      const agbChecked = document.getElementById('form-agb').checked;
-
-      const payload = {
-        bookingId: bookingId,
-        timestamp: timestampUTC,
-        clientIp: clientIp,
-        agbAccepted: agbChecked ? "AGB_AND_STORNO_ACCEPTED_TRUE" : "FALSE",
-        agbVersion: "AGB_VERSION_2026_01",
-        actionBtn: "BUTTON_CLICK_VERBINDLICH_BUCHEN",
-        source: "GoogleSite_FullEmbed",
-        
-        aptTitle: document.getElementById('form-apt-title').value,
-        aptCode: document.getElementById('form-apt-code').value,
-        startDate: document.getElementById('form-start').value,
-        endDate: document.getElementById('form-end').value,
-        company: document.getElementById('form-company').value,
-        vatId: document.getElementById('form-vatid').value,
-        street: document.getElementById('form-street').value,
-        zip: document.getElementById('form-zip').value,
-        city: document.getElementById('form-city').value,
-        country: document.getElementById('form-country').value,
-        email: document.getElementById('form-email').value,
-        phone: document.getElementById('form-phone').value,
-        guestsCount: document.getElementById('form-guests').value,
-        billingCycle: document.getElementById('form-billing-cycle').value,
-        refNumber: document.getElementById('form-ref').value,
-        userAgent: navigator.userAgent
-      };
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
 
       try {
-        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-        const resData = await res.json();
-        if (resData.success) { 
-          msgEl.innerText = "Buchung erfolgreich & rechtssicher erfasst!"; 
-          msgEl.style.color = "var(--pico-ins-color)"; 
-          document.getElementById('booking-form').reset(); 
-          goToStep(1); 
-        } else { 
-          msgEl.innerText = resData.message || "Fehler bei der Buchung."; 
-          msgEl.style.color = "var(--pico-del-color)"; 
+        const response = await fetch('${API_URL}?action=createBooking', {
+          method: 'POST',
+          body: JSON.stringify(data)
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          res.innerHTML = '<ins style="color: var(--pico-ins-color);">✓ Anfrage erfolgreich gesendet! Wir melden uns in Kürze.</ins>';
+          e.target.reset();
+        } else {
+          res.innerHTML = '<del style="color: var(--pico-del-color);">Anfrage fehlgeschlagen. Bitte erneut versuchen.</del>';
         }
       } catch (err) {
-        msgEl.innerText = "Verbindungsfehler. Bitte später erneut versuchen.";
-        msgEl.style.color = "var(--pico-del-color)";
+        res.innerHTML = '<del style="color: var(--pico-del-color);">Fehler beim Senden. Bitte rufen Sie uns direkt an.</del>';
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Verbindlich Anfragen';
       }
     }
   </script>

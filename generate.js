@@ -97,11 +97,23 @@ function parseApartmentRegions(apt) {
   const cleanStr = rawW.replace(/[()]/g, '');
   const parts = cleanStr.split(',').map(s => s.trim()).filter(Boolean);
 
-  if (!mainRegion && parts.length > 0) {
-    mainRegion = parts[0];
+  // Doppler auf Key-Ebene filtern (z.B. "Karlsruhe" und "karlsruhe")
+  const uniqueParts = [];
+  const seenKeys = new Set();
+  
+  for (const part of parts) {
+    const key = part.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (key && !seenKeys.has(key)) {
+      seenKeys.add(key);
+      uniqueParts.push(part);
+    }
   }
 
-  return { mainRegion, regionList: parts };
+  if (!mainRegion && uniqueParts.length > 0) {
+    mainRegion = uniqueParts[0];
+  }
+
+  return { mainRegion, regionList: uniqueParts };
 }
 
 function parseGermanDateStr(dateStr) {
@@ -204,10 +216,19 @@ async function buildSite() {
         regionsMap[cleanKey] = { name: regName, list: [] };
       }
 
-      regionsMap[cleanKey].list.push({
-        apt: apt,
-        distanceIndex: idx
+      // Sicherheitscheck: Verhindert doppelte Eintrags-Pushs für dasselbe Apartment in dieselbe Region
+      const aptIdentifier = apt.internalTitle || apt.Apartment || apt.apartmentPath || apt.apartment;
+      const alreadyExists = regionsMap[cleanKey].list.some(item => {
+        const itemIdentifier = item.apt.internalTitle || item.apt.Apartment || item.apt.apartmentPath || item.apt.apartment;
+        return itemIdentifier === aptIdentifier;
       });
+
+      if (!alreadyExists) {
+        regionsMap[cleanKey].list.push({
+          apt: apt,
+          distanceIndex: idx
+        });
+      }
 
       if (cleanMainKey && cleanKey !== cleanMainKey) {
         clustersMap[cleanMainKey].subRegions.set(cleanKey, regName);

@@ -154,7 +154,7 @@ async function buildSite() {
       ? `${city} <br><small style="color:var(--pico-muted-color);">🔒 Genaue Adresse erhalten Sie automatisch nach der Buchung.</small>`
       : apt.displayAddress;
 
-    // KORREKTUR: Fallback auf 4 Schlafzimmer und 8 Betten
+    // Fallback auf 4 Schlafzimmer und 8 Betten
     const bedrooms = apt.bedrooms || apt.Schlafzimmer || 4;
     const beds = apt.beds || apt.Betten || 8;
     const price = apt.pricePerNight || apt.Preis || '49';
@@ -205,10 +205,19 @@ async function buildSite() {
         regionsMap[cleanKey] = { name: regName, list: [] };
       }
 
-      regionsMap[cleanKey].list.push({
-        apt: apt,
-        distanceIndex: idx
+      // DEDUPLIZIERUNG: Prüfen, ob das Apartment in dieser Region schon vorhanden ist
+      const aptIdentifier = apt.Apartment || apt.apartmentPath || apt.apartment || apt.internalTitle || apt.title;
+      const alreadyExists = regionsMap[cleanKey].list.some(item => {
+        const itemIdentifier = item.apt.Apartment || item.apt.apartmentPath || item.apt.apartment || item.apt.internalTitle || item.apt.title;
+        return itemIdentifier === aptIdentifier;
       });
+
+      if (!alreadyExists) {
+        regionsMap[cleanKey].list.push({
+          apt: apt,
+          distanceIndex: idx
+        });
+      }
 
       if (cleanMainKey && cleanKey !== cleanMainKey) {
         clustersMap[cleanMainKey].subRegions.set(cleanKey, regName);
@@ -255,7 +264,6 @@ async function buildSite() {
       const apt = item.apt;
       const title = apt.title || apt.Title || 'Monteurwohnung';
       
-      // KORREKTUR: Fallback auf 1 Schlafzimmer und 1 Bett für Landingpages
       const bedrooms = apt.bedrooms || apt.Schlafzimmer || 1;
       const beds = apt.beds || apt.Betten || 1;
       const price = apt.pricePerNight || apt.Preis || '49';
@@ -337,7 +345,6 @@ async function buildSite() {
   Object.keys(clustersMap).sort().forEach(mainKey => {
     const cluster = clustersMap[mainKey];
     
-    // KORREKTUR: Verhindert doppelte Buttons für die Hauptregion
     let subBtnsHtml = '';
     cluster.subRegions.forEach((subName, subKey) => {
       if (subKey !== mainKey) {

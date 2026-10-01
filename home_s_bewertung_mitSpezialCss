@@ -1,0 +1,138 @@
+<style>
+  /* Spezial-CSS nur für den Bewertungs-Slider & Pills */
+  .section-alt-bg {
+    background-color: #f8fafc;
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
+    padding-left: calc(50vw - 50%);
+    padding-right: calc(50vw - 50%);
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .platform-pills {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .pill {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+    color: #fff;
+  }
+  .pill-booking { background: #003580; }
+  .pill-airbnb { background: #ff385c; }
+  .pill-google { background: #1a73e8; }
+
+  .reviews-slider {
+    display: flex;
+    gap: 1.25rem;
+    overflow-x: auto;
+    padding: 0.8rem 0 1.2rem 0;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .elfsight-style-card {
+    flex: 0 0 300px;
+    scroll-snap-align: start;
+    margin-bottom: 0;
+    padding: 1.4rem;
+    border-radius: 16px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .elfsight-style-card header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0;
+    margin-bottom: 0.6rem;
+    background: transparent;
+    border: none;
+  }
+
+  .review-author {
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: #0f172a;
+  }
+
+  .review-quote {
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--pico-primary, #1a73e8);
+    font-family: Georgia, serif;
+    margin-bottom: -0.5rem;
+  }
+
+  .review-body {
+    font-size: 0.88rem;
+    color: #334155;
+    line-height: 1.45;
+    margin: 0;
+  }
+
+  .badge-google { background: #e8f0fe; color: #1a73e8; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
+  .badge-booking { background: #e6f0fa; color: #003580; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
+</style>
+
+<!-- REVIEWS_SECTION -->
+<section class="section-padding section-alt-bg">
+  <div style="text-align: center; margin-bottom: 1.5rem;">
+    <div class="platform-pills">
+      <span class="pill pill-booking">Booking.com 7.9</span>
+      <span class="pill pill-airbnb">Airbnb 4.8</span>
+      <span class="pill pill-google">Google 5.0</span>
+    </div>
+    <h2 style="font-size: 1.6rem; font-weight: 700; margin: 0.5rem 0 0.2rem 0;">Was unsere Firmenkunden sagen</h2>
+    <p style="color: var(--pico-muted-color); font-size: 0.95rem;">(Über 600 verifizierte Gästebewertungen aus allen Portalen)</p>
+  </div>
+
+  <div class="reviews-slider">
+    <article class="elfsight-style-card">
+      <header>
+        <span class="review-author">Efendi B. (KTS GmbH)</span>
+        <span class="badge badge-google">★ 5.0 Google</span>
+      </header>
+      <div class="review-quote">"</div>
+      <p class="review-body">Wir die Firma KTS sind für Ihre bisherigen Dienste sehr dankbar und freuen uns weiterhin auf die Zeit miteinander. Sauber, professionell und zuverlässig!</p>
+    </article>
+
+    <article class="elfsight-style-card">
+      <header>
+        <span class="review-author">ER WIN (ePaG Bau GmbH)</span>
+        <span class="badge badge-google">★ 5.0 Google</span>
+      </header>
+      <div class="review-quote">"</div>
+      <p class="review-body">Perfekte Handwerker-Unterkunft! Unkomplizierter Kontakt und schnelle Abwicklung. Saubere und gut ausgestattete Wohnung. Kann ich nur empfehlen.</p>
+    </article>
+
+    <article class="elfsight-style-card">
+      <header>
+        <span class="review-author">Alexander P.</span>
+        <span class="badge badge-google">★ 5.0 Google</span>
+      </header>
+      <div class="review-quote">"</div>
+      <p class="review-body">Vielen Dank für den tollen Aufenthalt. Gerne buchen wir erneut bei L8, bisher immer reibungslos und auch jederzeit für Rückfragen erreichbar.</p>
+    </article>
+
+    <article class="elfsight-style-card">
+      <header>
+        <span class="review-author">Bau-Team Becker</span>
+        <span class="badge badge-booking">10 / 10 Booking</span>
+      </header>
+      <div class="review-quote">"</div>
+      <p class="review-body">Sehr gute Lage für die Baustelle in Stuttgart. Waschmaschine und Parkplatz direkt vor der Tür. Wir kommen definitiv wieder!</p>
+    </article>
+  </div>
+</section>

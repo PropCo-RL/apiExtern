@@ -16,92 +16,18 @@ jobs:
       - name: Python einrichten
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.11'
 
       - name: Google Drive Library installieren
-        run: pip install google-api-python-client google-auth
+        run: pip install --upgrade google-api-python-client google-auth
 
-      - name: Code-Dateien bündeln
+      - name: Code-Dateien buendeln
         run: |
           echo "=== REPOSITORY CODE BUNDLE ===" > repo_bundle.txt
           find . -maxdepth 2 -type f \( -name "*.js" -o -name "*.html" -o -name "*.css" -o -name "*.json" \) ! -path "*/node_modules/*" -exec sh -c 'echo "\n\n--- FILE: {} ---" >> repo_bundle.txt && cat "{}" >> repo_bundle.txt' \;
-          echo "✅ repo_bundle.txt erfolgreich erstellt."
 
       - name: Nach Google Drive hochladen
         env:
           GDRIVE_SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
           GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
-        run: |
-          python -c "
-          import os, json, sys, traceback
-          from google.oauth2 import service_account
-          from googleapiclient.discovery import build
-          from googleapiclient.http import MediaFileUpload
-          from googleapiclient.errors import HttpError
-
-          def log_gh_error(msg):
-              print(f'::error::{msg}')
-              print(f'❌ {msg}')
-
-          print('🚀 STARTE GOOGLE DRIVE UPLOAD-PROZESS...')
-
-          sa_json_raw = os.environ.get('GDRIVE_SA_JSON', '').strip()
-          folder_id = os.environ.get('GDRIVE_FOLDER_ID', '').strip()
-
-          if not sa_json_raw:
-              log_gh_error('Secret GDRIVE_SA_JSON ist leer oder wurde nicht übergeben!')
-              sys.exit(1)
-
-          if not folder_id:
-              log_gh_error('Secret GDRIVE_FOLDER_ID ist leer oder wurde nicht übergeben!')
-              sys.exit(1)
-
-          try:
-              creds_dict = json.loads(sa_json_raw)
-              print(f'✓ Service Account: {creds_dict.get(\"client_email\", \"Unbekannt\")}')
-          except Exception as e:
-              log_gh_error(f'GDRIVE_SA_JSON ist kein gültiges JSON: {e}')
-              sys.exit(1)
-
-          try:
-              creds = service_account.Credentials.from_service_account_info(
-                  creds_dict, scopes=['https://www.googleapis.com/auth/drive']
-              )
-              service = build('drive', 'v3', credentials=creds)
-          except Exception as e:
-              log_gh_error(f'Fehler bei der Initialisierung der Drive API: {e}')
-              sys.exit(1)
-
-          file_name = 'repo_bundle.txt'
-
-          try:
-              query = f\"'{folder_id}' in parents and name='{file_name}' and trashed=false\"
-              results = service.files().list(q=query, fields='files(id)').execute()
-              files = results.get('files', [])
-
-              media = MediaFileUpload(file_name, mimetype='text/plain', resumable=True)
-
-              if files:
-                  file_id = files[0]['id']
-                  service.files().update(fileId=file_id, media_body=media).execute()
-                  print('🎉 ERFOLG: Bestehende repo_bundle.txt in Google Drive aktualisiert!')
-              else:
-                  file_metadata = {'name': file_name, 'parents': [folder_id]}
-                  service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-                  print('🎉 ERFOLG: Neue repo_bundle.txt in Google Drive erstellt!')
-
-          except HttpError as err:
-              reason = err._get_reason()
-              status = err.resp.status
-              if status == 404:
-                  log_gh_error(f'Ordner-ID ({folder_id}) nicht gefunden oder keine Berechtigung!')
-              elif status == 403:
-                  log_gh_error('Zugriff verweigert! Prüfe, ob der Service Account im Drive-Ordner als Editor eingetragen ist.')
-              else:
-                  log_gh_error(f'Google API Fehler (Status {status}): {reason}')
-              sys.exit(1)
-          except Exception as err:
-              log_gh_error(f'Unerwarteter Fehler: {err}')
-              traceback.print_exc()
-              sys.exit(1)
-          "
+        run: python .github/scripts/upload_drive.py

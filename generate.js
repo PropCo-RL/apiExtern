@@ -154,7 +154,6 @@ async function buildSite() {
       ? `${city} <br><small style="color:var(--pico-muted-color);">🔒 Genaue Adresse erhalten Sie automatisch nach der Buchung.</small>`
       : apt.displayAddress;
 
-    // RUNDEN DER SCHLAFZIMMER (Behebt 1.5 -> 1)
     const bedrooms = Math.floor(parseFloat(apt.bedrooms || apt.Schlafzimmer) || 1);
     const beds = Math.floor(parseFloat(apt.beds || apt.Betten) || 1);
     const price = apt.pricePerNight || apt.Preis || '49';
@@ -331,20 +330,16 @@ async function buildSite() {
   });
 
   // 3. HAUPT-STARTSEITE GENERIEREN (/index.html)
-  // OPTIMIERTE STÄDTE-CLUSTERN FÜR GOOGLE ADS & HIGHLIGHT-BUTTONS
   let homepageClustersHtml = '';
   Object.keys(clustersMap).sort().forEach(mainKey => {
     const cluster = clustersMap[mainKey];
     
-    let subBtnsHtml = '';
+    // DIE HAUPTSTADT IMMER ALS ERSTES TAG HINZUFÜGEN!
+    let subBtnsHtml = `<a href="/${mainKey}/" class="sub-region-btn">📍 ${cluster.mainName}</a>\n`;
+    
     cluster.subRegions.forEach((subName, subKey) => {
       subBtnsHtml += `<a href="/${subKey}/" class="sub-region-btn">📍 ${subName}</a>\n`;
     });
-
-    // Falls keine Sub-Regionen da sind (z.B. Aschaffenburg), Fallback einfügen damit es nie leer aussieht!
-    if (!subBtnsHtml) {
-      subBtnsHtml = `<a href="/${mainKey}/" class="sub-region-btn">📍 ${cluster.mainName} Stadtgebiet</a>`;
-    }
 
     homepageClustersHtml += `
       <div class="cluster-card" style="border: 1px solid var(--pico-border-color); border-radius: 12px; padding: 1.2rem; margin-bottom: 1.2rem; background: var(--pico-card-background-color);">
@@ -425,7 +420,6 @@ async function buildSite() {
         if (!m.coords || !m.coords[0]) return;
         const pos = { lat: m.coords[0], lng: m.coords[1] };
         
-        // Filtert eventuelle Ausreißer außerhalb Deutschlands aus, damit der Zoom fokussiert bleibt
         if (pos.lat < 47 || pos.lat > 55 || pos.lng < 5 || pos.lng > 15) return;
 
         const marker = new google.maps.Marker({
@@ -457,7 +451,6 @@ async function buildSite() {
 
   fs.writeFileSync(path.join(process.cwd(), 'index.html'), homepageContent);
 
-  // 4. STATISCHE LEGAL-PAGES GENERIEREN
   const generateLegalPage = (folderName, titleStr, bodyHtml) => {
     const legalDir = path.join(process.cwd(), folderName);
     if (!fs.existsSync(legalDir)) fs.mkdirSync(legalDir, { recursive: true });

@@ -6,37 +6,32 @@ const { renderApartmentHtml } = require('./apartment_template');
 const API_URL = "https://script.google.com/macros/s/AKfycbyMD7mGXRmW9IQFIK9gRLUBRWwprCudXEhfWEDDGk9iyvNe0yyK6w5gIuhLXZOFue8Z3w/exec";
 const MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || "";
 
-// Favicon per SVG Data-URI
 const FAVICON_HTML = `<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23111827'/><text x='50' y='68' font-size='50' font-weight='bold' font-family='sans-serif' fill='white' text-anchor='middle'>L8</text></svg>">`;
 
-// KOORDINATEN-LOOKUP FÜR DIE MAP
 const CITY_COORDS = {
-  'pforzheim': { lat: 48.8911, lng: 8.7025 },
-  'karlsruhe': { lat: 49.0069, lng: 8.4037 },
-  'stuttgart': { lat: 48.7758, lng: 9.1829 },
-  'mannheim': { lat: 49.4875, lng: 8.4660 },
-  'heilbronn': { lat: 49.1427, lng: 9.2109 },
-  'gera': { lat: 50.8811, lng: 12.0833 },
-  'goppingen': { lat: 48.7042, lng: 9.6521 },
-  'kaiserslautern': { lat: 49.4401, lng: 7.7491 },
-  'calw': { lat: 48.7153, lng: 8.7410 },
-  'besigheim': { lat: 48.9984, lng: 9.1415 },
-  'badwildbad': { lat: 48.7503, lng: 8.5511 },
-  'renningen': { lat: 48.7656, lng: 8.9348 },
-  'reutlingen': { lat: 48.4914, lng: 9.2043 },
-  'hosbach': { lat: 50.0033, lng: 9.2056 },
-  'muhlacker': { lat: 48.9482, lng: 8.8410 },
-  'monsheim': { lat: 48.8631, lng: 8.8639 },
-  'worms': { lat: 49.6353, lng: 8.3598 },
-  'ketsch': { lat: 49.3658, lng: 8.5306 },
-  'ladenburg': { lat: 49.4722, lng: 8.6083 },
-  'heimsheim': { lat: 48.8839, lng: 8.8617 },
-  'vaihingenanderenz': { lat: 48.9328, lng: 8.9567 }
+  'pforzheim': [48.8911, 8.7025],
+  'karlsruhe': [49.0069, 8.4037],
+  'stuttgart': [48.7758, 9.1829],
+  'mannheim': [49.4875, 8.4660],
+  'heilbronn': [49.1427, 9.2109],
+  'gera': [50.8811, 12.0833],
+  'goppingen': [48.7042, 9.6521],
+  'kaiserslautern': [49.4401, 7.7491],
+  'calw': [48.7153, 8.7410],
+  'besigheim': [48.9984, 9.1415],
+  'badwildbad': [48.7503, 8.5511],
+  'renningen': [48.7656, 8.9348],
+  'reutlingen': [48.4914, 9.2043],
+  'hosbach': [50.0033, 9.2056],
+  'muhlacker': [48.9482, 8.8410],
+  'monsheim': [48.8631, 8.8639],
+  'worms': [49.6353, 8.3598],
+  'ketsch': [49.3658, 8.5306],
+  'ladenburg': [49.4722, 8.6083],
+  'heimsheim': [48.8839, 8.8617],
+  'vaihingenanderenz': [48.9328, 8.9567]
 };
 
-// ==========================================
-// RESSOURCEN DIREKT EINLESEN
-// ==========================================
 let HEADER_HTML = "", FOOTER_HTML = "";
 try {
   const hfContent = fs.readFileSync(path.join(__dirname, 'header_footer.html'), 'utf8');
@@ -60,9 +55,6 @@ try {
   REVIEWS_SECTION_HTML = contentFile.split('<!-- REVIEWS_SECTION -->')[1]?.split('<!-- /REVIEWS_SECTION -->')[0] || '';
 } catch (e) { console.warn("content.html nicht gefunden."); }
 
-// ==========================================
-// INTERNE HILFSFUNKTIONEN
-// ==========================================
 function optimizeImageUrl(url, width = 600) {
   if (!url) return 'https://via.placeholder.com/600x400?text=Bild+nicht+verf%C3%BCgbar';
   if (url.includes('googleusercontent.com') && !url.includes('=w')) {
@@ -158,14 +150,13 @@ async function buildSite() {
     const title = apt.title || apt.Title || 'Monteurwohnung';
     const city = apt.city || '';
     
-    // ANONYMISIERUNG FÜR DETAILSEITE (Falls Spalte AG = 'x')
     const fullAddress = apt.isAnonymous 
       ? `${city} <br><small style="color:var(--pico-muted-color);">🔒 Genaue Adresse erhalten Sie automatisch nach der Buchung.</small>`
       : apt.displayAddress;
 
-    // RUNDEN DER SCHLAFZIMMER (Behebt "Schlafzimmer: 1.5")
+    // RUNDEN DER SCHLAFZIMMER (Behebt 1.5 -> 1)
     const bedrooms = Math.floor(parseFloat(apt.bedrooms || apt.Schlafzimmer) || 1);
-    const beds = parseInt(apt.beds || apt.Betten) || 1;
+    const beds = Math.floor(parseFloat(apt.beds || apt.Betten) || 1);
     const price = apt.pricePerNight || apt.Preis || '49';
     const description = apt.description || '';
     const aptCode = apt.code || cleanPath.replace(/^a\//, '');
@@ -264,12 +255,11 @@ async function buildSite() {
       const apt = item.apt;
       const title = apt.title || apt.Title || 'Monteurwohnung';
       const bedrooms = Math.floor(parseFloat(apt.bedrooms || apt.Schlafzimmer) || 1);
-      const beds = parseInt(apt.beds || apt.Betten) || 1;
+      const beds = Math.floor(parseFloat(apt.beds || apt.Betten) || 1);
       const price = apt.pricePerNight || apt.Preis || '49';
       const rawPath = apt.Apartment || apt.apartmentPath || apt.apartment || '';
       const cleanPath = rawPath.toString().replace(/^\/+|\/+$/g, '').trim();
 
-      // ANONYMISIERUNG AUF DER REGIONS-LANDINGPAGE
       const addressDisplay = apt.isAnonymous 
         ? `${apt.city || regionData.name} <br><small style="color:var(--pico-muted-color);">🔒 Genaue Adresse nach Buchung</small>`
         : apt.displayAddress;
@@ -341,7 +331,7 @@ async function buildSite() {
   });
 
   // 3. HAUPT-STARTSEITE GENERIEREN (/index.html)
-  // BEHEBT DIE KLOBIGEN ÜBERSCHRIFTEN (Schlanke Städtenamen)
+  // OPTIMIERTE STÄDTE-CLUSTERN FÜR GOOGLE ADS & HIGHLIGHT-BUTTONS
   let homepageClustersHtml = '';
   Object.keys(clustersMap).sort().forEach(mainKey => {
     const cluster = clustersMap[mainKey];
@@ -351,18 +341,21 @@ async function buildSite() {
       subBtnsHtml += `<a href="/${subKey}/" class="sub-region-btn">📍 ${subName}</a>\n`;
     });
 
+    // Falls keine Sub-Regionen da sind (z.B. Aschaffenburg), Fallback einfügen damit es nie leer aussieht!
+    if (!subBtnsHtml) {
+      subBtnsHtml = `<a href="/${mainKey}/" class="sub-region-btn">📍 ${cluster.mainName} Stadtgebiet</a>`;
+    }
+
     homepageClustersHtml += `
       <div class="cluster-card" style="border: 1px solid var(--pico-border-color); border-radius: 12px; padding: 1.2rem; margin-bottom: 1.2rem; background: var(--pico-card-background-color);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
-          <a href="/${mainKey}/" style="font-size: 1.25rem; font-weight: 700; text-decoration: none; color: var(--pico-color);">${cluster.mainName}</a>
-          <a href="/${mainKey}/" role="button" class="outline" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; width: auto;">Alle anzeigen →</a>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.6rem; flex-wrap:wrap; gap:0.5rem;">
+          <a href="/${mainKey}/" class="cluster-main-link">📍 Monteurunterkünfte ${cluster.mainName}</a>
+          <a href="/${mainKey}/" role="button" class="outline" style="padding: 0.35rem 0.9rem; font-size: 0.85rem; width: auto; margin-bottom:0;">Wohnungen anzeigen →</a>
         </div>
-        ${subBtnsHtml ? `
-          <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.8rem;">
-            <span style="font-size:0.8rem; color:var(--pico-muted-color); font-weight:600;">Umkreis:</span>
-            ${subBtnsHtml}
-          </div>
-        ` : ''}
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.8rem;">
+          <span style="font-size:0.8rem; color:var(--pico-muted-color); font-weight:600;">Standorte:</span>
+          ${subBtnsHtml}
+        </div>
       </div>
     `;
   });
@@ -379,20 +372,6 @@ async function buildSite() {
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     ${SHARED_CSS}
-    .sub-region-btn {
-      font-size: 0.82rem;
-      padding: 0.25rem 0.65rem;
-      border-radius: 20px;
-      border: 1px solid var(--pico-border-color);
-      text-decoration: none;
-      color: var(--pico-muted-color);
-      background: var(--pico-background-color);
-      transition: all 0.2s ease;
-    }
-    .sub-region-btn:hover {
-      border-color: var(--pico-primary);
-      color: var(--pico-primary);
-    }
   </style>
 </head>
 <body>
@@ -407,7 +386,7 @@ async function buildSite() {
 
     ${REVIEWS_SECTION_HTML}
 
-    <div id="map" style="width: 100%; height: 400px; border-radius: 12px; margin: 2rem 0; border: 1px solid var(--pico-border-color);"></div>
+    ${MAP_SECTION_HTML}
 
     <h3 style="margin-bottom: 1rem;">Standort auswählen:</h3>
     <div class="clusters-container">
@@ -425,9 +404,12 @@ async function buildSite() {
 
     function initMap() {
       const markersData = ${JSON.stringify(mapMarkers)};
-      const map = new google.maps.Map(document.getElementById("map"), {
+      const mapContainer = document.getElementById("map") || document.getElementById("overview-map");
+      if (!mapContainer) return;
+
+      const map = new google.maps.Map(mapContainer, {
         zoom: 8,
-        center: { lat: 48.89, lng: 8.70 },
+        center: { lat: 48.95, lng: 8.70 },
         styles: [
           { "featureType": "administrative", "elementType": "labels.text.fill", "stylers": [{ "color": "#444444" }] },
           { "featureType": "landscape", "elementType": "all", "stylers": [{ "color": "#f2f2f2" }] },
@@ -438,9 +420,14 @@ async function buildSite() {
       });
 
       const bounds = new google.maps.LatLngBounds();
+      let validMarkers = 0;
       markersData.forEach(m => {
-        if (!m.coords) return;
+        if (!m.coords || !m.coords[0]) return;
         const pos = { lat: m.coords[0], lng: m.coords[1] };
+        
+        // Filtert eventuelle Ausreißer außerhalb Deutschlands aus, damit der Zoom fokussiert bleibt
+        if (pos.lat < 47 || pos.lat > 55 || pos.lng < 5 || pos.lng > 15) return;
+
         const marker = new google.maps.Marker({
           position: pos,
           map: map,
@@ -456,9 +443,10 @@ async function buildSite() {
         });
 
         bounds.extend(pos);
+        validMarkers++;
       });
 
-      if (markersData.length > 0) {
+      if (validMarkers > 0) {
         map.fitBounds(bounds);
       }
     }

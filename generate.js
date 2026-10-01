@@ -47,20 +47,13 @@ try {
   DATENSCHUTZ_BODY = legalContent.split('<!-- DATENSCHUTZ -->')[1]?.split('<!-- /DATENSCHUTZ -->')[0] || legalContent;
 } catch (e) { console.warn("legal.html nicht gefunden."); }
 
-// === NEUE SEKTIONS-DATEIEN EINLESEN ===
-let FEATURE_GRID_HTML = "", REVIEWS_SECTION_HTML = "", MAP_SECTION_HTML = "";
-
+let FEATURE_GRID_HTML = "", MAP_SECTION_HTML = "", REVIEWS_SECTION_HTML = "";
 try {
-  FEATURE_GRID_HTML = fs.readFileSync(path.join(__dirname, 'home_s_ausstattung_mitSpezialCss.html'), 'utf8');
-} catch (e) { console.warn("home_s_ausstattung_mitSpezialCss.html nicht gefunden."); }
-
-try {
-  REVIEWS_SECTION_HTML = fs.readFileSync(path.join(__dirname, 'home_s_bewertungen_mitSpezialCss.html'), 'utf8');
-} catch (e) { console.warn("home_s_bewertungen_mitSpezialCss.html nicht gefunden."); }
-
-try {
-  MAP_SECTION_HTML = fs.readFileSync(path.join(__dirname, 'home_s_karte_mitSpezialCss.html'), 'utf8');
-} catch (e) { console.warn("home_s_karte_mitSpezialCss.html nicht gefunden."); }
+  const contentFile = fs.readFileSync(path.join(__dirname, 'content.html'), 'utf8');
+  FEATURE_GRID_HTML = contentFile.split('<!-- FEATURE_GRID -->')[1]?.split('<!-- /FEATURE_GRID -->')[0] || '';
+  MAP_SECTION_HTML = contentFile.split('<!-- MAP_SECTION -->')[1]?.split('<!-- /MAP_SECTION -->')[0] || '';
+  REVIEWS_SECTION_HTML = contentFile.split('<!-- REVIEWS_SECTION -->')[1]?.split('<!-- /REVIEWS_SECTION -->')[0] || '';
+} catch (e) { console.warn("content.html nicht gefunden."); }
 
 function optimizeImageUrl(url, width = 600) {
   if (!url) return 'https://via.placeholder.com/600x400?text=Bild+nicht+verf%C3%BCgbar';
@@ -161,6 +154,7 @@ async function buildSite() {
       ? `${city} <br><small style="color:var(--pico-muted-color);">🔒 Genaue Adresse erhalten Sie automatisch nach der Buchung.</small>`
       : apt.displayAddress;
 
+    // Fallback auf 4 Schlafzimmer und 8 Betten
     const bedrooms = apt.bedrooms || apt.Schlafzimmer || 4;
     const beds = apt.beds || apt.Betten || 8;
     const price = apt.pricePerNight || apt.Preis || '49';
@@ -211,6 +205,8 @@ async function buildSite() {
         regionsMap[cleanKey] = { name: regName, list: [] };
       }
 
+      // regionList ist bereits dedupliziert in parseApartmentRegions()
+      // Daher: Direkter Push ohne weitere Deduplizierung
       regionsMap[cleanKey].list.push({
         apt: apt,
         distanceIndex: idx

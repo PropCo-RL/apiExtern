@@ -6,8 +6,6 @@ const { renderApartmentHtml } = require('./apartment_template');
 const API_URL = "https://script.google.com/macros/s/AKfycbyMD7mGXRmW9IQFIK9gRLUBRWwprCudXEhfWEDDGk9iyvNe0yyK6w5gIuhLXZOFue8Z3w/exec";
 const MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || "";
 
-const FAVICON_HTML = `<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23111827'/><text x='50' y='75' font-size='80' font-weight='bold' fill='%23fbbf24' text-anchor='middle'>L8</text></svg>">`;
-
 const CITY_COORDS = {
   'pforzheim': [48.8911, 8.7025],
   'karlsruhe': [49.0069, 8.4037],
@@ -32,9 +30,10 @@ const CITY_COORDS = {
   'vaihingenanderenz': [48.9328, 8.9567]
 };
 
-let HEADER_HTML = "", FOOTER_HTML = "";
+let HEADER_HTML = "", FOOTER_HTML = "", FAVICON_HTML = "";
 try {
   const hfContent = fs.readFileSync(path.join(__dirname, 'header_footer.html'), 'utf8');
+  FAVICON_HTML = hfContent.split('<!-- FAVICON -->')[1]?.split('<!-- /FAVICON -->')[0]?.trim() || '';
   HEADER_HTML = hfContent.split('<!-- HEADER -->')[1]?.split('<!-- /HEADER -->')[0] || '';
   FOOTER_HTML = hfContent.split('<!-- FOOTER -->')[1]?.split('<!-- /FOOTER -->')[0] || '';
 } catch (e) { console.warn("header_footer.html nicht gefunden."); }
@@ -143,7 +142,7 @@ async function buildSite() {
     console.warn("Konnte Verfügbarkeiten nicht abrufen:", err);
   }
 
-  // 1. APARTMENT-DETAILSEITEN GENERIEREN (/a/...)
+  // 1. APARTMENT-DETAILSEITEN GENERIEREN (/a/...) (Favicon-Stelle 1)
   apartments.forEach(apt => {
     const rawPath = apt.Apartment || apt.apartmentPath || apt.apartment || "";
     if (!rawPath) return;
@@ -186,7 +185,7 @@ async function buildSite() {
     fs.writeFileSync(path.join(dir, 'index.html'), htmlContent);
   });
 
-  // 2. REGIONEN-LANDINGPAGES GENERIEREN
+  // 2. REGIONEN-LANDINGPAGES GENERIEREN (Favicon-Stelle 2)
   const regionsMap = {};
   const clustersMap = {};
   const mapMarkers = [];
@@ -212,8 +211,6 @@ async function buildSite() {
         regionsMap[cleanKey] = { name: regName, list: [] };
       }
 
-      // regionList ist bereits dedupliziert in parseApartmentRegions()
-      // Daher: Direkter Push ohne weitere Deduplizierung
       regionsMap[cleanKey].list.push({
         apt: apt,
         distanceIndex: idx
@@ -340,7 +337,7 @@ async function buildSite() {
     fs.writeFileSync(path.join(regionDir, 'index.html'), cityHtmlContent);
   });
 
-  // 3. HAUPT-STARTSEITE GENERIEREN (/index.html)
+  // 3. HAUPT-STARTSEITE GENERIEREN (/index.html) (Favicon-Stelle 3)
   let homepageClustersHtml = '';
   Object.keys(clustersMap).sort().forEach(mainKey => {
     const cluster = clustersMap[mainKey];
@@ -463,6 +460,7 @@ async function buildSite() {
 
   fs.writeFileSync(path.join(process.cwd(), 'index.html'), homepageContent);
 
+  // 4. RECHTLICHE SEITEN (Favicon-Stelle 4)
   const generateLegalPage = (folderName, titleStr, bodyHtml) => {
     const legalDir = path.join(process.cwd(), folderName);
     if (!fs.existsSync(legalDir)) fs.mkdirSync(legalDir, { recursive: true });

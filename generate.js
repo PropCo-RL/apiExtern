@@ -4,33 +4,34 @@ const { SHARED_CSS } = require('./css');
 const { renderApartmentHtml } = require('./apartment_template');
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyMD7mGXRmW9IQFIK9gRLUBRWwprCudXEhfWEDDGk9iyvNe0yyK6w5gIuhLXZOFue8Z3w/exec";
+const MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || "";
 
 // Favicon per SVG Data-URI
 const FAVICON_HTML = `<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23111827'/><text x='50' y='68' font-size='50' font-weight='bold' font-family='sans-serif' fill='white' text-anchor='middle'>L8</text></svg>">`;
 
 // KOORDINATEN-LOOKUP FÜR DIE MAP
 const CITY_COORDS = {
-  'pforzheim': [48.8911, 8.7025],
-  'karlsruhe': [49.0069, 8.4037],
-  'stuttgart': [48.7758, 9.1829],
-  'mannheim': [49.4875, 8.4660],
-  'heilbronn': [49.1427, 9.2109],
-  'gera': [50.8811, 12.0833],
-  'goppingen': [48.7042, 9.6521],
-  'kaiserslautern': [49.4401, 7.7491],
-  'calw': [48.7153, 8.7410],
-  'besigheim': [48.9984, 9.1415],
-  'badwildbad': [48.7503, 8.5511],
-  'renningen': [48.7656, 8.9348],
-  'reutlingen': [48.4914, 9.2043],
-  'hosbach': [50.0033, 9.2056],
-  'muhlacker': [48.9482, 8.8410],
-  'monsheim': [48.8631, 8.8639],
-  'worms': [49.6353, 8.3598],
-  'ketsch': [49.3658, 8.5306],
-  'ladenburg': [49.4722, 8.6083],
-  'heimsheim': [48.8839, 8.8617],
-  'vaihingenanderenz': [48.9328, 8.9567]
+  'pforzheim': { lat: 48.8911, lng: 8.7025 },
+  'karlsruhe': { lat: 49.0069, lng: 8.4037 },
+  'stuttgart': { lat: 48.7758, lng: 9.1829 },
+  'mannheim': { lat: 49.4875, lng: 8.4660 },
+  'heilbronn': { lat: 49.1427, lng: 9.2109 },
+  'gera': { lat: 50.8811, lng: 12.0833 },
+  'goppingen': { lat: 48.7042, lng: 9.6521 },
+  'kaiserslautern': { lat: 49.4401, lng: 7.7491 },
+  'calw': { lat: 48.7153, lng: 8.7410 },
+  'besigheim': { lat: 48.9984, lng: 9.1415 },
+  'badwildbad': { lat: 48.7503, lng: 8.5511 },
+  'renningen': { lat: 48.7656, lng: 8.9348 },
+  'reutlingen': { lat: 48.4914, lng: 9.2043 },
+  'hosbach': { lat: 50.0033, lng: 9.2056 },
+  'muhlacker': { lat: 48.9482, lng: 8.8410 },
+  'monsheim': { lat: 48.8631, lng: 8.8639 },
+  'worms': { lat: 49.6353, lng: 8.3598 },
+  'ketsch': { lat: 49.3658, lng: 8.5306 },
+  'ladenburg': { lat: 49.4722, lng: 8.6083 },
+  'heimsheim': { lat: 48.8839, lng: 8.8617 },
+  'vaihingenanderenz': { lat: 48.9328, lng: 8.9567 }
 };
 
 // ==========================================
@@ -162,8 +163,9 @@ async function buildSite() {
       ? `${city} <br><small style="color:var(--pico-muted-color);">🔒 Genaue Adresse erhalten Sie automatisch nach der Buchung.</small>`
       : apt.displayAddress;
 
-    const bedrooms = apt.bedrooms || apt.Schlafzimmer || 4;
-    const beds = apt.beds || apt.Betten || 8;
+    // RUNDEN DER SCHLAFZIMMER (Behebt "Schlafzimmer: 1.5")
+    const bedrooms = Math.floor(parseFloat(apt.bedrooms || apt.Schlafzimmer) || 1);
+    const beds = parseInt(apt.beds || apt.Betten) || 1;
     const price = apt.pricePerNight || apt.Preis || '49';
     const description = apt.description || '';
     const aptCode = apt.code || cleanPath.replace(/^a\//, '');
@@ -261,13 +263,13 @@ async function buildSite() {
     regionData.list.forEach((item, index) => {
       const apt = item.apt;
       const title = apt.title || apt.Title || 'Monteurwohnung';
-      const bedrooms = apt.bedrooms || apt.Schlafzimmer || 1;
-      const beds = apt.beds || apt.Betten || 1;
+      const bedrooms = Math.floor(parseFloat(apt.bedrooms || apt.Schlafzimmer) || 1);
+      const beds = parseInt(apt.beds || apt.Betten) || 1;
       const price = apt.pricePerNight || apt.Preis || '49';
       const rawPath = apt.Apartment || apt.apartmentPath || apt.apartment || '';
       const cleanPath = rawPath.toString().replace(/^\/+|\/+$/g, '').trim();
 
-      // ANONYMISIERUNG AUF DER KARTEN-LISTE
+      // ANONYMISIERUNG AUF DER REGIONS-LANDINGPAGE
       const addressDisplay = apt.isAnonymous 
         ? `${apt.city || regionData.name} <br><small style="color:var(--pico-muted-color);">🔒 Genaue Adresse nach Buchung</small>`
         : apt.displayAddress;
@@ -339,6 +341,7 @@ async function buildSite() {
   });
 
   // 3. HAUPT-STARTSEITE GENERIEREN (/index.html)
+  // BEHEBT DIE KLOBIGEN ÜBERSCHRIFTEN (Schlanke Städtenamen)
   let homepageClustersHtml = '';
   Object.keys(clustersMap).sort().forEach(mainKey => {
     const cluster = clustersMap[mainKey];
@@ -351,7 +354,7 @@ async function buildSite() {
     homepageClustersHtml += `
       <div class="cluster-card" style="border: 1px solid var(--pico-border-color); border-radius: 12px; padding: 1.2rem; margin-bottom: 1.2rem; background: var(--pico-card-background-color);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
-          <a href="/${mainKey}/" style="font-size: 1.3rem; font-weight: 700; text-decoration: none; color: var(--pico-color);">Monteurwohnungen ${cluster.mainName} & Umgebung</a>
+          <a href="/${mainKey}/" style="font-size: 1.25rem; font-weight: 700; text-decoration: none; color: var(--pico-color);">${cluster.mainName}</a>
           <a href="/${mainKey}/" role="button" class="outline" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; width: auto;">Alle anzeigen →</a>
         </div>
         ${subBtnsHtml ? `
@@ -373,7 +376,6 @@ async function buildSite() {
   ${FAVICON_HTML}
   <meta name="description" content="Mieten Sie voll ausgestattete Monteurwohnungen & Monteurunterkünfte in über 20 Städten. Inklusive Küche, Bad, WLAN & Parkmöglichkeiten.">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.slate.min.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     ${SHARED_CSS}
@@ -391,28 +393,6 @@ async function buildSite() {
       border-color: var(--pico-primary);
       color: var(--pico-primary);
     }
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2.5rem;
-    }
-    .feature-box {
-      border: 1px solid var(--pico-border-color);
-      border-radius: 12px;
-      padding: 1rem 1.2rem;
-      background: var(--pico-card-background-color);
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-    .feature-icon {
-      width: 28px;
-      height: 28px;
-      stroke-width: 2;
-      color: var(--pico-primary);
-      flex-shrink: 0;
-    }
   </style>
 </head>
 <body>
@@ -427,7 +407,7 @@ async function buildSite() {
 
     ${REVIEWS_SECTION_HTML}
 
-    ${MAP_SECTION_HTML}
+    <div id="map" style="width: 100%; height: 400px; border-radius: 12px; margin: 2rem 0; border: 1px solid var(--pico-border-color);"></div>
 
     <h3 style="margin-bottom: 1rem;">Standort auswählen:</h3>
     <div class="clusters-container">
@@ -436,35 +416,54 @@ async function buildSite() {
   </main>
   ${FOOTER_HTML}
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function() {
       if (typeof lucide !== 'undefined') {
         lucide.createIcons();
       }
+    });
 
-      const markers = ${JSON.stringify(mapMarkers)};
-      if (!markers || markers.length === 0) return;
-
-      const map = L.map('overview-map').setView([48.9, 8.8], 8);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap'
-      }).addTo(map);
-
-      const boundsGroup = new L.featureGroup();
-      markers.forEach(m => {
-        const marker = L.marker(m.coords).addTo(map);
-        marker.bindPopup('<strong>' + m.name + '</strong><br><a href="/' + m.key + '/">Wohnungen sehen →</a>');
-        if (m.key !== 'gera') {
-          boundsGroup.addLayer(marker);
-        }
+    function initMap() {
+      const markersData = ${JSON.stringify(mapMarkers)};
+      const map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 8,
+        center: { lat: 48.89, lng: 8.70 },
+        styles: [
+          { "featureType": "administrative", "elementType": "labels.text.fill", "stylers": [{ "color": "#444444" }] },
+          { "featureType": "landscape", "elementType": "all", "stylers": [{ "color": "#f2f2f2" }] },
+          { "featureType": "poi", "elementType": "all", "stylers": [{ "visibility": "off" }] },
+          { "featureType": "road", "elementType": "all", "stylers": [{ "saturation": -100 }, { "lightness": 45 }] },
+          { "featureType": "water", "elementType": "all", "stylers": [{ "color": "#cbd5e1" }, { "visibility": "on" }] }
+        ]
       });
 
-      if (boundsGroup.getLayers().length > 0) {
-        map.fitBounds(boundsGroup.getBounds().pad(0.1));
+      const bounds = new google.maps.LatLngBounds();
+      markersData.forEach(m => {
+        if (!m.coords) return;
+        const pos = { lat: m.coords[0], lng: m.coords[1] };
+        const marker = new google.maps.Marker({
+          position: pos,
+          map: map,
+          title: m.name
+        });
+
+        const infoWindow = new google.maps.InfoWindow({
+          content: '<strong>' + m.name + '</strong><br><a href="/' + m.key + '/">Wohnungen sehen →</a>'
+        });
+
+        marker.addListener("click", () => {
+          infoWindow.open(map, marker);
+        });
+
+        bounds.extend(pos);
+      });
+
+      if (markersData.length > 0) {
+        map.fitBounds(bounds);
       }
-    });
+    }
   </script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&callback=initMap" async defer></script>
 </body>
 </html>`;
 

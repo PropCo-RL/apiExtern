@@ -154,8 +154,9 @@ async function buildSite() {
       ? `${city} <br><small style="color:var(--pico-muted-color);">🔒 Genaue Adresse erhalten Sie automatisch nach der Buchung.</small>`
       : apt.displayAddress;
 
-    const bedrooms = Math.floor(parseFloat(apt.bedrooms || apt.Schlafzimmer) || 1);
-    const beds = Math.floor(parseFloat(apt.beds || apt.Betten) || 1);
+    // KORREKTUR: Fallback auf 4 Schlafzimmer und 8 Betten
+    const bedrooms = apt.bedrooms || apt.Schlafzimmer || 4;
+    const beds = apt.beds || apt.Betten || 8;
     const price = apt.pricePerNight || apt.Preis || '49';
     const description = apt.description || '';
     const aptCode = apt.code || cleanPath.replace(/^a\//, '');
@@ -253,8 +254,10 @@ async function buildSite() {
     regionData.list.forEach((item, index) => {
       const apt = item.apt;
       const title = apt.title || apt.Title || 'Monteurwohnung';
-      const bedrooms = Math.floor(parseFloat(apt.bedrooms || apt.Schlafzimmer) || 1);
-      const beds = Math.floor(parseFloat(apt.beds || apt.Betten) || 1);
+      
+      // KORREKTUR: Fallback auf 1 Schlafzimmer und 1 Bett für Landingpages
+      const bedrooms = apt.bedrooms || apt.Schlafzimmer || 1;
+      const beds = apt.beds || apt.Betten || 1;
       const price = apt.pricePerNight || apt.Preis || '49';
       const rawPath = apt.Apartment || apt.apartmentPath || apt.apartment || '';
       const cleanPath = rawPath.toString().replace(/^\/+|\/+$/g, '').trim();
@@ -334,11 +337,12 @@ async function buildSite() {
   Object.keys(clustersMap).sort().forEach(mainKey => {
     const cluster = clustersMap[mainKey];
     
-    // DIE HAUPTSTADT IMMER ALS ERSTES TAG HINZUFÜGEN!
-    let subBtnsHtml = `<a href="/${mainKey}/" class="sub-region-btn">📍 ${cluster.mainName}</a>\n`;
-    
+    // KORREKTUR: Verhindert doppelte Buttons für die Hauptregion
+    let subBtnsHtml = '';
     cluster.subRegions.forEach((subName, subKey) => {
-      subBtnsHtml += `<a href="/${subKey}/" class="sub-region-btn">📍 ${subName}</a>\n`;
+      if (subKey !== mainKey) {
+        subBtnsHtml += `<a href="/${subKey}/" class="sub-region-btn">📍 ${subName}</a>\n`;
+      }
     });
 
     homepageClustersHtml += `
@@ -349,6 +353,7 @@ async function buildSite() {
         </div>
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.8rem;">
           <span style="font-size:0.8rem; color:var(--pico-muted-color); font-weight:600;">Standorte:</span>
+          <a href="/${mainKey}/" class="sub-region-btn">📍 ${cluster.mainName}</a>
           ${subBtnsHtml}
         </div>
       </div>

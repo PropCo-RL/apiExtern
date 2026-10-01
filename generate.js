@@ -154,7 +154,6 @@ async function buildSite() {
       ? `${city} <br><small style="color:var(--pico-muted-color);">🔒 Genaue Adresse erhalten Sie automatisch nach der Buchung.</small>`
       : apt.displayAddress;
 
-    // Fallback auf 4 Schlafzimmer und 8 Betten
     const bedrooms = apt.bedrooms || apt.Schlafzimmer || 4;
     const beds = apt.beds || apt.Betten || 8;
     const price = apt.pricePerNight || apt.Preis || '49';
@@ -205,6 +204,7 @@ async function buildSite() {
         regionsMap[cleanKey] = { name: regName, list: [] };
       }
 
+      // Ohne einschränkende Deduplizierung: Mehrfach-Zuweisung erlaubt
       regionsMap[cleanKey].list.push({
         apt: apt,
         distanceIndex: idx
@@ -407,23 +407,30 @@ async function buildSite() {
 
       const map = new google.maps.Map(mapContainer, {
         zoom: 8,
-        center: { lat: 48.95, lng: 8.70 },
+        center: { lat: 49.20, lng: 9.00 },
+        maxZoom: 11,
+        minZoom: 6,
+        disableDefaultUI: false,
+        zoomControl: true,
+        streetViewControl: false,
+        mapTypeControl: false,
         styles: [
-          { "featureType": "administrative", "elementType": "labels.text.fill", "stylers": [{ "color": "#444444" }] },
-          { "featureType": "landscape", "elementType": "all", "stylers": [{ "color": "#f2f2f2" }] },
+          { "featureType": "administrative", "elementType": "labels.text.fill", "stylers": [{ "color": "#334155" }] },
+          { "featureType": "landscape", "elementType": "all", "stylers": [{ "color": "#f8fafc" }] },
           { "featureType": "poi", "elementType": "all", "stylers": [{ "visibility": "off" }] },
-          { "featureType": "road", "elementType": "all", "stylers": [{ "saturation": -100 }, { "lightness": 45 }] },
-          { "featureType": "water", "elementType": "all", "stylers": [{ "color": "#cbd5e1" }, { "visibility": "on" }] }
+          { "featureType": "road", "elementType": "all", "stylers": [{ "saturation": -80 }, { "lightness": 30 }] },
+          { "featureType": "water", "elementType": "all", "stylers": [{ "color": "#cbd5e1" }] }
         ]
       });
 
       const bounds = new google.maps.LatLngBounds();
       let validMarkers = 0;
+
       markersData.forEach(m => {
         if (!m.coords || !m.coords[0]) return;
         const pos = { lat: m.coords[0], lng: m.coords[1] };
         
-        if (pos.lat < 47 || pos.lat > 55 || pos.lng < 5 || pos.lng > 15) return;
+        if (pos.lat < 47.0 || pos.lat > 55.0 || pos.lng < 5.5 || pos.lng > 15.0) return;
 
         const marker = new google.maps.Marker({
           position: pos,
@@ -431,8 +438,17 @@ async function buildSite() {
           title: m.name
         });
 
+        const infoContent = \`
+          <div style="padding: 4px 6px; font-family: sans-serif;">
+            <strong style="font-size: 0.95rem; color: #0f172a;">\${m.name}</strong><br>
+            <a href="/\${m.key}/" style="display: inline-block; margin-top: 6px; font-size: 0.85rem; font-weight: 600; color: #2563eb; text-decoration: none;">
+              Wohnungen anzeigen →
+            </a>
+          </div>
+        \`;
+
         const infoWindow = new google.maps.InfoWindow({
-          content: '<strong>' + m.name + '</strong><br><a href="/' + m.key + '/">Wohnungen sehen →</a>'
+          content: infoContent
         });
 
         marker.addListener("click", () => {
@@ -445,6 +461,11 @@ async function buildSite() {
 
       if (validMarkers > 0) {
         map.fitBounds(bounds);
+        
+        const listener = google.maps.event.addListener(map, "idle", function() {
+          if (map.getZoom() > 9) map.setZoom(9);
+          google.maps.event.removeListener(listener);
+        });
       }
     }
   </script>

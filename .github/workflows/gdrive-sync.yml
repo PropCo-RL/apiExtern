@@ -13,15 +13,54 @@ jobs:
       - name: Code auschecken
         uses: actions/checkout@v4
 
-      - name: Code-Dateien in eine Textdatei bündeln
+      - name: Python einrichten
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Google Drive Library installieren
+        run: pip install google-api-python-client google-auth
+
+      - name: Code-Dateien bündeln
         run: |
           echo "=== REPOSITORY CODE BUNDLE ===" > repo_bundle.txt
           find . -maxdepth 2 -type f \( -name "*.js" -o -name "*.html" -o -name "*.css" -o -name "*.json" \) ! -path "*/node_modules/*" -exec sh -c 'echo "\n\n--- FILE: {} ---" >> repo_bundle.txt && cat "{}" >> repo_bundle.txt' \;
 
-      - name: repo_bundle.txt nach Google Drive hochladen
-        uses: JavierJeronymo/google-drive-upload-action@v1
-        with:
-          credentials: ${{ secrets.GDRIVE_SA_JSON }}
-          filename: 'repo_bundle.txt'
-          folderId: ${{ secrets.GDRIVE_FOLDER_ID }}
-          overwrite: 'true'
+      - name: Nach Google Drive hochladen
+        env:
+          GDRIVE_SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
+          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+        run: |
+          python -c "
+          import os, json
+          from google.oauth2 import service_account
+          from googleapiclient.discovery import build
+          from googleapiclient.http import MediaFileUpload
+
+          creds_dict = json.loads(os.environ['GDRIVE_SA_JSON'])
+          folder_id = os.environ['GDRIVE_FOLDER_ID']
+
+          # Scope auf vollen Drive-Lese/Schreibzugriff für den freigegebenen Ordner setzen
+          creds = service_account.Credentials.from_service_account_info(
+              creds_dict, scopes=['https://www.googleapis.com/auth/drive']
+          )
+          service = build('drive', 'v3', credentials=creds)
+
+          file_name = 'repo_bundle.txt'
+          
+          # Suche nach bestehender Datei im Ordner für Überschreibung (Overwrite)
+          query = f\"'{folder_id}' in parents and name='{file_name}' and trashed=false\"
+          results = service.files().list(q=query, fields='files(id)').execute()
+          files = results.get('files', [])
+
+          media = MediaFileUpload(file_name, mimetype='text/plain', resumable=True)
+
+          if files:
+              file_id = files[0]['id']
+              service.files().update(fileId=file_id, media_body=media).execute()
+              print('✅ Bestehende repo_bundle.txt in Google Drive erfolgreich aktualisiert!')
+          else:
+              file_metadata = {'name': file_name, 'parents': [folder_id]}
+              service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+              print('✅ Neue repo_bundle.txt in Google Drive erfolgreich erstellt!')
+          "

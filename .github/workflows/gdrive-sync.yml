@@ -1,0 +1,26 @@
+name: Sync Repo to Google Drive
+
+on:
+  push:
+    branches:
+      - main  # Passe das an, falls dein Hauptbranch "master" heißt
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Bundle Code Files
+        run: |
+          echo "=== REPOSITORY CODE BUNDLE ===" > repo_bundle.txt
+          find . -maxdepth 2 -type f \( -name "*.js" -o -name "*.html" -o -name "*.css" -o -name "*.json" \) ! -path "*/node_modules/*" -exec sh -c 'echo "\n\n--- FILE: {} ---" >> repo_bundle.txt && cat "{}" >> repo_bundle.txt' \;
+
+      - name: Upload to Google Drive
+        uses: adityak2002/google-drive-upload-action@v1.0
+        with:
+          credentials: ${{ secrets.GDRIVE_SA_JSON }}
+          filename: 'repo_bundle.txt'
+          folderId: ${{ secrets.GDRIVE_FOLDER_ID }}
+          overwrite: true

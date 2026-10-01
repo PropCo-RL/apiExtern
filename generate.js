@@ -47,13 +47,20 @@ try {
   DATENSCHUTZ_BODY = legalContent.split('<!-- DATENSCHUTZ -->')[1]?.split('<!-- /DATENSCHUTZ -->')[0] || legalContent;
 } catch (e) { console.warn("legal.html nicht gefunden."); }
 
-let FEATURE_GRID_HTML = "", MAP_SECTION_HTML = "", REVIEWS_SECTION_HTML = "";
+// === NEU: Einzelne Sektions-Dateien laden ===
+let FEATURE_GRID_HTML = "", REVIEWS_SECTION_HTML = "", MAP_SECTION_HTML = "";
+
 try {
-  const contentFile = fs.readFileSync(path.join(__dirname, 'content.html'), 'utf8');
-  FEATURE_GRID_HTML = contentFile.split('<!-- FEATURE_GRID -->')[1]?.split('<!-- /FEATURE_GRID -->')[0] || '';
-  MAP_SECTION_HTML = contentFile.split('<!-- MAP_SECTION -->')[1]?.split('<!-- /MAP_SECTION -->')[0] || '';
-  REVIEWS_SECTION_HTML = contentFile.split('<!-- REVIEWS_SECTION -->')[1]?.split('<!-- /REVIEWS_SECTION -->')[0] || '';
-} catch (e) { console.warn("content.html nicht gefunden."); }
+  FEATURE_GRID_HTML = fs.readFileSync(path.join(__dirname, 'home_s_ausstattung_mitSpezialCss.html'), 'utf8');
+} catch (e) { console.warn("home_s_ausstattung_mitSpezialCss.html nicht gefunden."); }
+
+try {
+  REVIEWS_SECTION_HTML = fs.readFileSync(path.join(__dirname, 'home_s_bewertungen_mitSpezialCss.html'), 'utf8');
+} catch (e) { console.warn("home_s_bewertungen_mitSpezialCss.html nicht gefunden."); }
+
+try {
+  MAP_SECTION_HTML = fs.readFileSync(path.join(__dirname, 'home_s_karte_mitSpezialCss.html'), 'utf8');
+} catch (e) { console.warn("home_s_karte_mitSpezialCss.html nicht gefunden."); }
 
 function optimizeImageUrl(url, width = 600) {
   if (!url) return 'https://via.placeholder.com/600x400?text=Bild+nicht+verf%C3%BCgbar';

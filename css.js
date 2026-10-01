@@ -24,6 +24,22 @@ const SHARED_CSS = `
       padding-bottom: 2rem !important;
     }
 
+    /* SEKTIONS-TRENNUNGEN UND WEICHE ÜBERGÄNGE */
+    .section-padding {
+      padding: 2.2rem 0;
+      border-bottom: 1px solid var(--pico-border-color, #f1f5f9);
+    }
+
+    .section-alt-bg {
+      background-color: #f8fafc;
+      margin-left: calc(-50vw + 50%);
+      margin-right: calc(-50vw + 50%);
+      padding-left: calc(50vw - 50%);
+      padding-right: calc(50vw - 50%);
+      border-top: 1px solid #e2e8f0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
     .catalog-grid { 
       display: grid; 
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
@@ -132,43 +148,68 @@ const SHARED_CSS = `
     .badge-warning { background-color: #fef3c7 !important; color: #b45309 !important; }
     .badge-danger  { background-color: #fee2e2 !important; color: #991b1b !important; }
 
-    /* PICO V2 BEWERTUNGS-SLIDER STYLES */
+    /* PLATFORM PILLS OBEN */
+    .platform-pills {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .pill {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.65rem;
+      border-radius: 20px;
+      color: #fff;
+    }
+    .pill-booking { background: #003580; }
+    .pill-airbnb { background: #ff385c; }
+    .pill-google { background: #1a73e8; }
+
+    /* MODERNE ELFSIGHT-STYLE REVIEW CARDS */
     .reviews-slider {
       display: flex;
       gap: 1.25rem;
       overflow-x: auto;
-      padding: 0.5rem 0 1.5rem 0;
+      padding: 0.5rem 0 1rem 0;
       scroll-snap-type: x mandatory;
       -webkit-overflow-scrolling: touch;
     }
 
-    .reviews-slider article {
-      flex: 0 0 290px;
+    .elfsight-style-card {
+      flex: 0 0 300px;
       scroll-snap-align: start;
       margin-bottom: 0;
-      padding: 1.25rem;
-      border-radius: 12px;
+      padding: 1.4rem;
+      border-radius: 16px;
       background: #ffffff;
-      border: 1px solid var(--pico-border-color, #e2e8f0);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      position: relative;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .reviews-slider header {
+    .elfsight-style-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.08);
+    }
+
+    .elfsight-style-card header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 0 0.5rem 0;
+      padding: 0;
       margin-bottom: 0.6rem;
       background: transparent;
-      border-bottom: 1px solid #f1f5f9;
+      border: none;
     }
 
     .review-author {
       font-weight: 700;
-      font-size: 0.9rem;
+      font-size: 0.92rem;
       color: #0f172a;
     }
 
@@ -176,11 +217,19 @@ const SHARED_CSS = `
     .badge-airbnb { background: #ffe5e9; color: #ff385c; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
     .badge-booking { background: #e6f0fa; color: #003580; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
 
+    .review-quote {
+      font-size: 2.2rem;
+      line-height: 1;
+      color: #cbd5e1;
+      font-family: Georgia, serif;
+      margin-bottom: -0.6rem;
+    }
+
     .review-body {
-      font-size: 0.85rem;
+      font-size: 0.88rem;
       color: #334155;
       line-height: 1.45;
-      font-style: italic;
+      margin: 0;
     }
 
     .trust-badges {

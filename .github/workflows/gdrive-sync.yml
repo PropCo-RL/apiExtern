@@ -30,4 +30,4 @@ jobs:
         env:
           GDRIVE_SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
           GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
-        run: python .github/scripts/upload_drive.py
+        run: python .github/workflows/upload_drive.py

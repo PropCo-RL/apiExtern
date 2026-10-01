@@ -1,0 +1,80 @@
+<style>
+  /* Spezial-CSS nur für das Feature-Grid */
+  .feature-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+    gap: 1rem !important;
+    margin: 1.5rem 0 2.5rem 0 !important;
+  }
+
+  .feature-box {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.8rem !important;
+    padding: 1rem 1.2rem !important;
+    border: 1px solid var(--pico-border-color, #e2e8f0) !important;
+    border-radius: 12px !important;
+    background: var(--pico-card-background-color, #ffffff) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
+  }
+
+  .feature-icon {
+    width: 28px;
+    height: 28px;
+    color: var(--pico-primary, #1e293b);
+    flex-shrink: 0;
+  }
+</style>
+
+<!-- FEATURE_GRID -->
+<section class="section-padding">
+  <div class="feature-grid">
+    <div class="feature-box">
+      <i data-lucide="bed" class="feature-icon"></i>
+      <div>
+        <strong>Nur Einzelbetten</strong><br>
+        <small style="color:var(--pico-muted-color);">Maximale Privatsphäre für Mitarbeiter</small>
+      </div>
+    </div>
+
+    <div class="feature-box">
+      <i data-lucide="home" class="feature-icon"></i>
+      <div>
+        <strong>Ganze Apartments</strong><br>
+        <small style="color:var(--pico-muted-color);">Eigene Küche & Bad (Keine Shared-Spaces)</small>
+      </div>
+    </div>
+
+    <div class="feature-box">
+      <i data-lucide="wifi" class="feature-icon"></i>
+      <div>
+        <strong>Schnelles WLAN</strong><br>
+        <small style="color:var(--pico-muted-color);">Kostenlos in jeder Unterkunft</small>
+      </div>
+    </div>
+
+    <div class="feature-box">
+      <i data-lucide="washing-machine" class="feature-icon"></i>
+      <div>
+        <strong>Waschmaschine vor Ort</strong><br>
+        <small style="color:var(--pico-muted-color);">Kostenfrei zur Nutzung bereit</small>
+      </div>
+    </div>
+
+    <div class="feature-box">
+      <i data-lucide="car" class="feature-icon"></i>
+      <div>
+        <strong>Parkmöglichkeiten</strong><br>
+        <small style="color:var(--pico-muted-color);">Direkt für PKW & Transporter</small>
+      </div>
+    </div>
+
+    <div class="feature-box">
+      <i data-lucide="file-text" class="feature-icon"></i>
+      <div>
+        <strong>MwSt.-Rechnung</strong><br>
+        <small style="color:var(--pico-muted-color);">Offizielle Firmenrechnungen</small>
+      </div>
+    </div>
+  </div>
+</section>

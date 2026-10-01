@@ -6,7 +6,7 @@ const { renderApartmentHtml } = require('./apartment_template');
 const API_URL = "https://script.google.com/macros/s/AKfycbyMD7mGXRmW9IQFIK9gRLUBRWwprCudXEhfWEDDGk9iyvNe0yyK6w5gIuhLXZOFue8Z3w/exec";
 const MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || "";
 
-const FAVICON_HTML = `<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23111827'/><text x='50' y='68' font-size='50' font-weight='bold' font-family='sans-serif' fill='white' text-anchor='middle'>L8</text></svg>">`;
+const FAVICON_HTML = `<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23111827'/><text x='50' y='75' font-size='80' font-weight='bold' fill='%23fbbf24' text-anchor='middle'>L8</text></svg>">`;
 
 const CITY_COORDS = {
   'pforzheim': [48.8911, 8.7025],
@@ -97,23 +97,11 @@ function parseApartmentRegions(apt) {
   const cleanStr = rawW.replace(/[()]/g, '');
   const parts = cleanStr.split(',').map(s => s.trim()).filter(Boolean);
 
-  // Doppler auf Key-Ebene filtern (z.B. "Karlsruhe" und "karlsruhe")
-  const uniqueParts = [];
-  const seenKeys = new Set();
-  
-  for (const part of parts) {
-    const key = part.toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (key && !seenKeys.has(key)) {
-      seenKeys.add(key);
-      uniqueParts.push(part);
-    }
+  if (!mainRegion && parts.length > 0) {
+    mainRegion = parts[0];
   }
 
-  if (!mainRegion && uniqueParts.length > 0) {
-    mainRegion = uniqueParts[0];
-  }
-
-  return { mainRegion, regionList: uniqueParts };
+  return { mainRegion, regionList: parts };
 }
 
 function parseGermanDateStr(dateStr) {
@@ -166,6 +154,7 @@ async function buildSite() {
       ? `${city} <br><small style="color:var(--pico-muted-color);">🔒 Genaue Adresse erhalten Sie automatisch nach der Buchung.</small>`
       : apt.displayAddress;
 
+    // Fallback auf 4 Schlafzimmer und 8 Betten
     const bedrooms = apt.bedrooms || apt.Schlafzimmer || 4;
     const beds = apt.beds || apt.Betten || 8;
     const price = apt.pricePerNight || apt.Preis || '49';
@@ -216,19 +205,12 @@ async function buildSite() {
         regionsMap[cleanKey] = { name: regName, list: [] };
       }
 
-      // Sicherheitscheck: Verhindert doppelte Eintrags-Pushs für dasselbe Apartment in dieselbe Region
-      const aptIdentifier = apt.internalTitle || apt.Apartment || apt.apartmentPath || apt.apartment;
-      const alreadyExists = regionsMap[cleanKey].list.some(item => {
-        const itemIdentifier = item.apt.internalTitle || item.apt.Apartment || item.apt.apartmentPath || item.apt.apartment;
-        return itemIdentifier === aptIdentifier;
+      // regionList ist bereits dedupliziert in parseApartmentRegions()
+      // Daher: Direkter Push ohne weitere Deduplizierung
+      regionsMap[cleanKey].list.push({
+        apt: apt,
+        distanceIndex: idx
       });
-
-      if (!alreadyExists) {
-        regionsMap[cleanKey].list.push({
-          apt: apt,
-          distanceIndex: idx
-        });
-      }
 
       if (cleanMainKey && cleanKey !== cleanMainKey) {
         clustersMap[cleanMainKey].subRegions.set(cleanKey, regName);

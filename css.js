@@ -24,7 +24,7 @@ const SHARED_CSS = `
       padding-bottom: 2rem !important;
     }
 
-    /* FEATURE GRID (FEATURING 2-COL MOBILE / 3-6 COL DESKTOP) */
+    /* FEATURE GRID */
     .feature-grid {
       display: grid !important;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
@@ -157,6 +157,14 @@ const SHARED_CSS = `
       color: #0f172a;
     }
 
+    .review-quote {
+      font-size: 2rem;
+      line-height: 1;
+      color: var(--pico-primary, #1a73e8);
+      font-family: Georgia, serif;
+      margin-bottom: -0.5rem;
+    }
+
     .badge-google { background: #e8f0fe; color: #1a73e8; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
     .badge-airbnb { background: #ffe5e9; color: #ff385c; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
     .badge-booking { background: #e6f0fa; color: #003580; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
@@ -168,7 +176,7 @@ const SHARED_CSS = `
       margin: 0;
     }
 
-    /* CLUSTER CARDS OPTIMIERUNG FOR ADS */
+    /* CLUSTER CARDS OPTIMIERUNG */
     .cluster-main-link {
       font-size: 1.25rem;
       font-weight: 700;
@@ -229,6 +237,7 @@ const SHARED_CSS = `
 
     .hidden { display: none !important; }
 
+    /* AIRBNB-STYLE GALERIE GRID (DESKTOP) */
     .gallery-grid { 
       display: grid; 
       grid-template-columns: 2fr 1fr 1fr; 
@@ -247,6 +256,74 @@ const SHARED_CSS = `
       transition: opacity 0.2s ease; 
     }
 
+    .gallery-grid-item:hover { opacity: 0.88; }
+    .gallery-grid-item:first-child { grid-row: span 2; }
+
+    /* GALERIE MOBILE SLIDER */
+    @media (max-width: 768px) {
+      .gallery-grid { 
+        display: flex; 
+        overflow-x: auto; 
+        scroll-snap-type: x mandatory; 
+        grid-template-columns: none; 
+        grid-template-rows: none; 
+        height: 250px; 
+        border-radius: 12px; 
+      }
+      .gallery-grid-item { 
+        flex: 0 0 85%; 
+        scroll-snap-align: start; 
+      }
+      .gallery-grid-item:first-child { grid-row: auto; }
+    }
+
+    /* MULTI-STEP CHECKOUT STYLES */
+    .step-indicator { 
+      display: flex; 
+      justify-content: space-between; 
+      margin-bottom: 1.5rem; 
+      position: relative; 
+    }
+    .step-indicator::before { 
+      content: ''; 
+      position: absolute; 
+      top: 15px; 
+      left: 0; 
+      right: 0; 
+      height: 2px; 
+      background: var(--pico-border-color); 
+      z-index: 1; 
+    }
+    .step-item { 
+      position: relative; 
+      z-index: 2; 
+      background: var(--pico-card-background-color); 
+      padding: 0 10px; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      font-size: 0.8rem; 
+      font-weight: 600; 
+      color: var(--pico-muted-color); 
+    }
+    .step-number { 
+      width: 32px; 
+      height: 32px; 
+      border-radius: 50%; 
+      background: var(--pico-border-color); 
+      color: var(--pico-color); 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      margin-bottom: 4px; 
+      font-weight: bold; 
+    }
+    .step-item.active .step-number { background: var(--pico-primary); color: #fff; }
+    .step-item.active { color: var(--pico-color); }
+    .step-item.completed .step-number { background: #15803d; color: #fff; }
+    .step-buttons { display: flex; justify-content: space-between; margin-top: 1.5rem; gap: 10px; }
+
+    /* LIGHTBOX */
     .lightbox-modal { 
       display: none; position: fixed; z-index: 9999; left: 0; top: 0; 
       width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); 

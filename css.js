@@ -63,6 +63,8 @@ const SHARED_CSS = `
       display: flex; 
       flex-direction: column; 
       border: 1px solid var(--pico-border-color); 
+      border-radius: var(--pico-border-radius);
+      background: var(--pico-card-background-color);
     }
 
     .apt-card img { 
@@ -129,6 +131,57 @@ const SHARED_CSS = `
     .badge-success { background-color: #dcfce7 !important; color: #15803d !important; }
     .badge-warning { background-color: #fef3c7 !important; color: #b45309 !important; }
     .badge-danger  { background-color: #fee2e2 !important; color: #991b1b !important; }
+
+    /* PICO V2 BEWERTUNGS-SLIDER STYLES */
+    .reviews-slider {
+      display: flex;
+      gap: 1.25rem;
+      overflow-x: auto;
+      padding: 0.5rem 0 1.5rem 0;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .reviews-slider article {
+      flex: 0 0 290px;
+      scroll-snap-align: start;
+      margin-bottom: 0;
+      padding: 1.25rem;
+      border-radius: 12px;
+      background: #ffffff;
+      border: 1px solid var(--pico-border-color, #e2e8f0);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .reviews-slider header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 0 0.5rem 0;
+      margin-bottom: 0.6rem;
+      background: transparent;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .review-author {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #0f172a;
+    }
+
+    .badge-google { background: #e8f0fe; color: #1a73e8; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
+    .badge-airbnb { background: #ffe5e9; color: #ff385c; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
+    .badge-booking { background: #e6f0fa; color: #003580; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
+
+    .review-body {
+      font-size: 0.85rem;
+      color: #334155;
+      line-height: 1.45;
+      font-style: italic;
+    }
 
     .trust-badges {
       display: flex;

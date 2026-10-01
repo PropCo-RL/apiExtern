@@ -24,9 +24,35 @@ const SHARED_CSS = `
       padding-bottom: 2rem !important;
     }
 
+    /* FEATURE GRID (FEATURING 2-COL MOBILE / 3-6 COL DESKTOP) */
+    .feature-grid {
+      display: grid !important;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+      gap: 1rem !important;
+      margin: 1.5rem 0 2.5rem 0 !important;
+    }
+
+    .feature-box {
+      display: flex !important;
+      align-items: center !important;
+      gap: 0.8rem !important;
+      padding: 1rem 1.2rem !important;
+      border: 1px solid var(--pico-border-color, #e2e8f0) !important;
+      border-radius: 12px !important;
+      background: var(--pico-card-background-color, #ffffff) !important;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
+    }
+
+    .feature-icon {
+      width: 28px;
+      height: 28px;
+      color: var(--pico-primary, #1e293b);
+      flex-shrink: 0;
+    }
+
     /* SEKTIONS-TRENNUNGEN UND WEICHE ÜBERGÄNGE */
     .section-padding {
-      padding: 2.2rem 0;
+      padding: 2rem 0;
       border-bottom: 1px solid var(--pico-border-color, #f1f5f9);
     }
 
@@ -45,31 +71,6 @@ const SHARED_CSS = `
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
       gap: 1.5rem; 
       margin-top: 1.5rem;
-    }
-
-    .cities-grid { 
-      display: grid; 
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
-      gap: 1.2rem; 
-      margin-top: 1.5rem; 
-    }
-
-    .city-card { 
-      padding: 1.2rem; 
-      text-align: center; 
-      font-weight: bold; 
-      font-size: 1.1rem; 
-      border: 1px solid var(--pico-border-color); 
-      border-radius: 12px; 
-      text-decoration: none; 
-      color: var(--pico-color);
-      display: block; 
-      transition: background 0.2s ease, border-color 0.2s ease;
-    }
-
-    .city-card:hover { 
-      background: var(--pico-primary-background); 
-      border-color: var(--pico-primary);
     }
 
     .apt-card { 
@@ -97,57 +98,6 @@ const SHARED_CSS = `
       flex-grow: 1; 
     }
 
-    .gallery-grid { 
-      display: grid; 
-      grid-template-columns: 2fr 1fr 1fr; 
-      grid-template-rows: 170px 170px; 
-      gap: 8px; 
-      border-radius: 16px; 
-      overflow: hidden; 
-      margin-bottom: 1.5rem; 
-    }
-
-    .gallery-grid-item { 
-      width: 100%; 
-      height: 100%; 
-      object-fit: cover; 
-      cursor: pointer; 
-      transition: opacity 0.2s ease; 
-    }
-
-    .gallery-grid-item:hover { opacity: 0.88; }
-    .gallery-grid-item:first-child { grid-row: span 2; }
-
-    @media (max-width: 768px) {
-      .gallery-grid { 
-        display: flex; 
-        overflow-x: auto; 
-        scroll-snap-type: x mandatory; 
-        grid-template-columns: none; 
-        grid-template-rows: none; 
-        height: 250px; 
-        border-radius: 12px; 
-      }
-      .gallery-grid-item { 
-        flex: 0 0 85%; 
-        scroll-snap-align: start; 
-      }
-      .gallery-grid-item:first-child { grid-row: auto; }
-    }
-
-    /* BADGE FARBEN */
-    .badge { 
-      display: inline-block; 
-      padding: 0.25rem 0.65rem; 
-      font-size: 0.75rem; 
-      font-weight: 700; 
-      border-radius: 20px; 
-      margin-bottom: 0.5rem; 
-    }
-    .badge-success { background-color: #dcfce7 !important; color: #15803d !important; }
-    .badge-warning { background-color: #fef3c7 !important; color: #b45309 !important; }
-    .badge-danger  { background-color: #fee2e2 !important; color: #991b1b !important; }
-
     /* PLATFORM PILLS OBEN */
     .platform-pills {
       display: flex;
@@ -167,12 +117,12 @@ const SHARED_CSS = `
     .pill-airbnb { background: #ff385c; }
     .pill-google { background: #1a73e8; }
 
-    /* MODERNE ELFSIGHT-STYLE REVIEW CARDS */
+    /* BEWERTUNGS-SLIDER */
     .reviews-slider {
       display: flex;
       gap: 1.25rem;
       overflow-x: auto;
-      padding: 0.5rem 0 1rem 0;
+      padding: 0.8rem 0 1.2rem 0;
       scroll-snap-type: x mandatory;
       -webkit-overflow-scrolling: touch;
     }
@@ -185,16 +135,10 @@ const SHARED_CSS = `
       border-radius: 16px;
       background: #ffffff;
       border: 1px solid #e2e8f0;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
       display: flex;
       flex-direction: column;
       position: relative;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .elfsight-style-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.08);
     }
 
     .elfsight-style-card header {
@@ -217,20 +161,57 @@ const SHARED_CSS = `
     .badge-airbnb { background: #ffe5e9; color: #ff385c; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
     .badge-booking { background: #e6f0fa; color: #003580; font-weight: 600; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
 
-    .review-quote {
-      font-size: 2.2rem;
-      line-height: 1;
-      color: #cbd5e1;
-      font-family: Georgia, serif;
-      margin-bottom: -0.6rem;
-    }
-
     .review-body {
       font-size: 0.88rem;
       color: #334155;
       line-height: 1.45;
       margin: 0;
     }
+
+    /* CLUSTER CARDS OPTIMIERUNG FOR ADS */
+    .cluster-main-link {
+      font-size: 1.25rem;
+      font-weight: 700;
+      text-decoration: none;
+      color: #0f172a;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: color 0.2s ease;
+    }
+    .cluster-main-link:hover {
+      color: #1a73e8;
+    }
+
+    .sub-region-btn {
+      font-size: 0.85rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      border: 1px solid var(--pico-border-color, #cbd5e1);
+      text-decoration: none;
+      color: var(--pico-color, #334155);
+      background: #ffffff;
+      display: inline-block;
+      transition: all 0.2s ease;
+    }
+    .sub-region-btn:hover {
+      border-color: #1a73e8;
+      color: #1a73e8;
+      background: #f0f7ff;
+    }
+
+    /* BADGES */
+    .badge { 
+      display: inline-block; 
+      padding: 0.25rem 0.65rem; 
+      font-size: 0.75rem; 
+      font-weight: 700; 
+      border-radius: 20px; 
+      margin-bottom: 0.5rem; 
+    }
+    .badge-success { background-color: #dcfce7 !important; color: #15803d !important; }
+    .badge-warning { background-color: #fef3c7 !important; color: #b45309 !important; }
+    .badge-danger  { background-color: #fee2e2 !important; color: #991b1b !important; }
 
     .trust-badges {
       display: flex;
@@ -248,6 +229,24 @@ const SHARED_CSS = `
 
     .hidden { display: none !important; }
 
+    .gallery-grid { 
+      display: grid; 
+      grid-template-columns: 2fr 1fr 1fr; 
+      grid-template-rows: 170px 170px; 
+      gap: 8px; 
+      border-radius: 16px; 
+      overflow: hidden; 
+      margin-bottom: 1.5rem; 
+    }
+
+    .gallery-grid-item { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover; 
+      cursor: pointer; 
+      transition: opacity 0.2s ease; 
+    }
+
     .lightbox-modal { 
       display: none; position: fixed; z-index: 9999; left: 0; top: 0; 
       width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); 
@@ -260,16 +259,6 @@ const SHARED_CSS = `
 
     .detail-grid-container { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-top: 1.5rem; }
     @media (max-width: 768px) { .detail-grid-container { grid-template-columns: 1fr; } }
-
-    /* MULTI-STEP CHECKOUT STYLES */
-    .step-indicator { display: flex; justify-content: space-between; margin-bottom: 1.5rem; position: relative; }
-    .step-indicator::before { content: ''; position: absolute; top: 15px; left: 0; right: 0; height: 2px; background: var(--pico-border-color); z-index: 1; }
-    .step-item { position: relative; z-index: 2; background: var(--pico-card-background-color); padding: 0 10px; display: flex; flex-direction: column; align-items: center; font-size: 0.8rem; font-weight: 600; color: var(--pico-muted-color); }
-    .step-number { width: 32px; height: 32px; border-radius: 50%; background: var(--pico-border-color); color: var(--pico-color); display: flex; align-items: center; justify-content: center; margin-bottom: 4px; font-weight: bold; }
-    .step-item.active .step-number { background: var(--pico-primary); color: #fff; }
-    .step-item.active { color: var(--pico-color); }
-    .step-item.completed .step-number { background: #15803d; color: #fff; }
-    .step-buttons { display: flex; justify-content: space-between; margin-top: 1.5rem; gap: 10px; }
 `;
 
 module.exports = { SHARED_CSS };

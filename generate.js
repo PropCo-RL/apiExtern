@@ -205,19 +205,10 @@ async function buildSite() {
         regionsMap[cleanKey] = { name: regName, list: [] };
       }
 
-      // DEDUPLIZIERUNG: Prüfen, ob das Apartment in dieser Region schon vorhanden ist
-      const aptIdentifier = apt.Apartment || apt.apartmentPath || apt.apartment || apt.internalTitle || apt.title;
-      const alreadyExists = regionsMap[cleanKey].list.some(item => {
-        const itemIdentifier = item.apt.Apartment || item.apt.apartmentPath || item.apt.apartment || item.apt.internalTitle || item.apt.title;
-        return itemIdentifier === aptIdentifier;
+      regionsMap[cleanKey].list.push({
+        apt: apt,
+        distanceIndex: idx
       });
-
-      if (!alreadyExists) {
-        regionsMap[cleanKey].list.push({
-          apt: apt,
-          distanceIndex: idx
-        });
-      }
 
       if (cleanMainKey && cleanKey !== cleanMainKey) {
         clustersMap[cleanMainKey].subRegions.set(cleanKey, regName);

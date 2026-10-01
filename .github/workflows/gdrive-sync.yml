@@ -33,30 +33,34 @@ jobs:
           GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
         run: |
           python -c "
-          import os, json, sys
+          import os, json, sys, traceback
           from google.oauth2 import service_account
           from googleapiclient.discovery import build
           from googleapiclient.http import MediaFileUpload
           from googleapiclient.errors import HttpError
 
-          print('🚀 Starte Google Drive Upload-Prozess...')
+          def log_gh_error(msg):
+              print(f'::error::{msg}')
+              print(f'❌ {msg}')
+
+          print('🚀 STARTE GOOGLE DRIVE UPLOAD-PROZESS...')
 
           sa_json_raw = os.environ.get('GDRIVE_SA_JSON', '').strip()
           folder_id = os.environ.get('GDRIVE_FOLDER_ID', '').strip()
 
           if not sa_json_raw:
-              print('❌ FEHLER: Secret GDRIVE_SA_JSON ist leer oder wurde nicht übergeben!')
+              log_gh_error('Secret GDRIVE_SA_JSON ist leer oder wurde nicht übergeben!')
               sys.exit(1)
 
           if not folder_id:
-              print('❌ FEHLER: Secret GDRIVE_FOLDER_ID ist leer oder wurde nicht übergeben!')
+              log_gh_error('Secret GDRIVE_FOLDER_ID ist leer oder wurde nicht übergeben!')
               sys.exit(1)
 
           try:
               creds_dict = json.loads(sa_json_raw)
-              print(f'✓ Authentifiziere als: {creds_dict.get(\"client_email\", \"Unbekannt\")}')
+              print(f'✓ Service Account: {creds_dict.get(\"client_email\", \"Unbekannt\")}')
           except Exception as e:
-              print(f'❌ FEHLER: GDRIVE_SA_JSON ist kein gültiges JSON-Format: {e}')
+              log_gh_error(f'GDRIVE_SA_JSON ist kein gültiges JSON: {e}')
               sys.exit(1)
 
           try:
@@ -65,7 +69,7 @@ jobs:
               )
               service = build('drive', 'v3', credentials=creds)
           except Exception as e:
-              print(f'❌ FEHLER beim Verbindungsaufbau zu Google Drive: {e}')
+              log_gh_error(f'Fehler bei der Initialisierung der Drive API: {e}')
               sys.exit(1)
 
           file_name = 'repo_bundle.txt'
@@ -87,13 +91,17 @@ jobs:
                   print('🎉 ERFOLG: Neue repo_bundle.txt in Google Drive erstellt!')
 
           except HttpError as err:
-              print(f'❌ GOOGLE API FEHLER (Status {err.resp.status}): {err._get_reason()}')
-              if err.resp.status == 404:
-                  print('👉 HINWEIS: Ordner-ID nicht gefunden oder der Ordner wurde nicht für den Service Account freigegeben!')
-              elif err.resp.status == 403:
-                  print('👉 HINWEIS: Rechte fehlen! Stelle sicher, dass der Service Account im Drive-Ordner als Editor eingetragen ist.')
+              reason = err._get_reason()
+              status = err.resp.status
+              if status == 404:
+                  log_gh_error(f'Ordner-ID ({folder_id}) nicht gefunden oder keine Berechtigung!')
+              elif status == 403:
+                  log_gh_error('Zugriff verweigert! Prüfe, ob der Service Account im Drive-Ordner als Editor eingetragen ist.')
+              else:
+                  log_gh_error(f'Google API Fehler (Status {status}): {reason}')
               sys.exit(1)
           except Exception as err:
-              print(f'❌ UNERWARTETER FEHLER: {err}')
+              log_gh_error(f'Unerwarteter Fehler: {err}')
+              traceback.print_exc()
               sys.exit(1)
           "

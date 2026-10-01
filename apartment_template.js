@@ -14,7 +14,6 @@ function renderApartmentHtml({
   API_URL,
   FAVICON_HTML
 }) {
-  // Filtert HTML-Tags für die Meta-Description heraus, damit das HTML-Tag nicht ausbricht
   const cleanAddressText = fullAddress ? fullAddress.split('<br>')[0].replace(/<[^>]*>/g, '').trim() : title;
 
   return `<!DOCTYPE html>
@@ -185,9 +184,35 @@ function renderApartmentHtml({
       if (currentImageIndex >= currentGalleryImages.length) currentImageIndex = 0;
       document.getElementById('lightboxImg').src = currentGalleryImages[currentImageIndex];
     }
-    function handleBookingSubmit(e) {
+
+    async function handleBookingSubmit(e) {
       e.preventDefault();
+      const msgEl = document.getElementById('form-msg'); 
+      msgEl.innerText = "Sichere Verbindung aufbauen & Buchung verarbeiten..."; 
+      msgEl.style.color = "var(--pico-primary)";
+
+      let clientIp = "IP_konnte_nicht_ermittelt_werden";
+      try {
+        const ipRes = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipRes.json();
+        clientIp = ipData.ip;
+      } catch (err) {
+        console.warn("IP-Abruf fehlgeschlagen", err);
+      }
+
+      const timestampUTC = new Date().toISOString();
+      const bookingId = 'BK-SITE-' + Math.floor(100000 + Math.random() * 900000);
+      const agbChecked = document.getElementById('form-agb').checked;
+
       const payload = {
+        bookingId: bookingId,
+        timestamp: timestampUTC,
+        clientIp: clientIp,
+        agbAccepted: agbChecked ? "AGB_AND_STORNO_ACCEPTED_TRUE" : "FALSE",
+        agbVersion: "AGB_VERSION_2026_01",
+        actionBtn: "BUTTON_CLICK_VERBINDLICH_BUCHEN",
+        source: "GoogleSite_FullEmbed",
+        
         aptTitle: document.getElementById('form-apt-title').value,
         aptCode: document.getElementById('form-apt-code').value,
         startDate: document.getElementById('form-start').value,
@@ -205,12 +230,26 @@ function renderApartmentHtml({
         refNumber: document.getElementById('form-ref').value,
         userAgent: navigator.userAgent
       };
-      const msgEl = document.getElementById('form-msg'); msgEl.innerText = "Verarbeite Buchung..."; msgEl.style.color = "var(--pico-primary)";
-      fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) }).then(res => res.json()).then(res => {
-        if (res.success) { msgEl.innerText = res.message; msgEl.style.color = "var(--pico-ins-color)"; document.getElementById('booking-form').reset(); goToStep(1); }
-        else { msgEl.innerText = res.message; msgEl.style.color = "var(--pico-del-color)"; }
-      });
+
+      fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) })
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) { 
+            msgEl.innerText = "Buchung erfolgreich & rechtssicher erfasst!"; 
+            msgEl.style.color = "var(--pico-ins-color)"; 
+            document.getElementById('booking-form').reset(); 
+            goToStep(1); 
+          } else { 
+            msgEl.innerText = res.message || "Fehler bei der Buchung."; 
+            msgEl.style.color = "var(--pico-del-color)"; 
+          }
+        })
+        .catch(err => {
+            msgEl.innerText = "Verbindungsfehler. Bitte später erneut versuchen.";
+            msgEl.style.color = "var(--pico-del-color)";
+        });
     }
+
     function formatDateForInput(dateObj) {
       const year = dateObj.getFullYear(); const month = String(dateObj.getMonth() + 1).padStart(2, '0'); const day = String(dateObj.getDate()).padStart(2, '0');
       return \`\${year}-\${month}-\${day}\`;

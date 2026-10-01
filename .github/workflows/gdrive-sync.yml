@@ -25,42 +25,84 @@ jobs:
         run: |
           echo "=== REPOSITORY CODE BUNDLE ===" > repo_bundle.txt
           find . -maxdepth 2 -type f \( -name "*.js" -o -name "*.html" -o -name "*.css" -o -name "*.json" \) ! -path "*/node_modules/*" -exec sh -c 'echo "\n\n--- FILE: {} ---" >> repo_bundle.txt && cat "{}" >> repo_bundle.txt' \;
+          echo "✅ repo_bundle.txt erfolgreich erstellt."
 
-      - name: Nach Google Drive hochladen
+      - name: Nach Google Drive hochladen (mit erweiterter Diagnose)
         env:
           GDRIVE_SA_JSON: ${{ secrets.GDRIVE_SA_JSON }}
           GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
         run: |
           python -c "
-          import os, json
+          import os, json, sys
           from google.oauth2 import service_account
           from googleapiclient.discovery import build
           from googleapiclient.http import MediaFileUpload
+          from googleapiclient.errors import HttpError
 
-          creds_dict = json.loads(os.environ['GDRIVE_SA_JSON'])
-          folder_id = os.environ['GDRIVE_FOLDER_ID']
+          print('🔍 STARTE DIAGNOSE...')
 
-          # Scope auf vollen Drive-Lese/Schreibzugriff für den freigegebenen Ordner setzen
-          creds = service_account.Credentials.from_service_account_info(
-              creds_dict, scopes=['https://www.googleapis.com/auth/drive']
-          )
-          service = build('drive', 'v3', credentials=creds)
+          # 1. Umgebungsvariablen prüfen
+          sa_json_raw = os.environ.get('GDRIVE_SA_JSON', '').strip()
+          folder_id = os.environ.get('GDRIVE_FOLDER_ID', '').strip()
+
+          if not sa_json_raw:
+              print('❌ FEHLER: Secret GDRIVE_SA_JSON ist leer oder fehlt!')
+              sys.exit(1)
+          else:
+              print('✓ Secret GDRIVE_SA_JSON wurde gefunden.')
+
+          if not folder_id:
+              print('❌ FEHLER: Secret GDRIVE_FOLDER_ID ist leer oder fehlt!')
+              sys.exit(1)
+          else:
+              print(f'✓ Secret GDRIVE_FOLDER_ID gefunden: {folder_id}')
+
+          # 2. JSON Parsing prüfen
+          try:
+              creds_dict = json.loads(sa_json_raw)
+              print(f'✓ Service Account E-Mail: {creds_dict.get(\"client_email\", \"N/A\")}')
+          except Exception as e:
+              print(f'❌ FEHLER: GDRIVE_SA_JSON ist kein gültiges JSON! Details: {e}')
+              sys.exit(1)
+
+          # 3. Authentifizierung aufbauen
+          try:
+              creds = service_account.Credentials.from_service_account_info(
+                  creds_dict, scopes=['https://www.googleapis.com/auth/drive']
+              )
+              service = build('drive', 'v3', credentials=creds)
+              print('✓ Google Drive Service erfolgreich initialisiert.')
+          except Exception as e:
+              print(f'❌ FEHLER bei der Authentifizierung: {e}')
+              sys.exit(1)
 
           file_name = 'repo_bundle.txt'
-          
-          # Suche nach bestehender Datei im Ordner für Überschreibung (Overwrite)
-          query = f\"'{folder_id}' in parents and name='{file_name}' and trashed=false\"
-          results = service.files().list(q=query, fields='files(id)').execute()
-          files = results.get('files', [])
 
-          media = MediaFileUpload(file_name, mimetype='text/plain', resumable=True)
+          # 4. Suche und Upload ausführen
+          try:
+              query = f\"'{folder_id}' in parents and name='{file_name}' and trashed=false\"
+              results = service.files().list(q=query, fields='files(id)').execute()
+              files = results.get('files', [])
 
-          if files:
-              file_id = files[0]['id']
-              service.files().update(fileId=file_id, media_body=media).execute()
-              print('✅ Bestehende repo_bundle.txt in Google Drive erfolgreich aktualisiert!')
-          else:
-              file_metadata = {'name': file_name, 'parents': [folder_id]}
-              service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-              print('✅ Neue repo_bundle.txt in Google Drive erfolgreich erstellt!')
+              media = MediaFileUpload(file_name, mimetype='text/plain', resumable=True)
+
+              if files:
+                  file_id = files[0]['id']
+                  service.files().update(fileId=file_id, media_body=media).execute()
+                  print('🎉 ERFOLG: Bestehende repo_bundle.txt in Google Drive aktualisiert!')
+              else:
+                  file_metadata = {'name': file_name, 'parents': [folder_id]}
+                  service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+                  print('🎉 ERFOLG: Neue repo_bundle.txt in Google Drive erstellt!')
+
+          except HttpError as err:
+              print(f'❌ GOOGLE API FEHLER (Status {err.resp.status}): {err._get_reason()}')
+              if err.resp.status == 404:
+                  print('👉 HINWEIS: Ordner-ID nicht gefunden oder der Ordner wurde nicht für den Service Account freigegeben!')
+              elif err.resp.status == 403:
+                  print('👉 HINWEIS: Keine Berechtigung! Prüfe, ob der Ordner in Drive für den Service Account als Editor freigegeben wurde.')
+              sys.exit(1)
+          except Exception as err:
+              print(f'❌ UNERWARTETER FEHLER: {err}')
+              sys.exit(1)
           "

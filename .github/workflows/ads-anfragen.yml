@@ -29,6 +29,6 @@ jobs:
         run: npm test
       - name: Anfragen übertragen
         env:
-          WIX_API_KEY: ${{ secrets.WIX_API_KEY }}
+          WIX_API_KEY: ${{ secrets.WIX_API_KEY || secrets.WIX_KEY }}
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY || secrets.GAPPSCRIPT_SA_CREDENTIALS_WRITE }}
         run: npm run sync

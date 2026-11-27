@@ -41,4 +41,44 @@
     </div>
   </div>
 </footer>
+<!-- TRACKING: GA4 erst nach Zustimmung (Banner, Wahl im Browser gespeichert) -->
+<div id="cookie-banner" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:9999; background:#1e293b; color:#fff; padding:1rem; font-size:0.9rem;">
+  <div class="container" style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:center; justify-content:space-between;">
+    <span>Wir nutzen Google Analytics, um zu sehen, wie Besucher die Seite finden. Nur mit Ihrer Zustimmung. <a href="/datenschutz/" style="color:#cbd5e1;">Datenschutz</a></span>
+    <span style="display:flex; gap:0.5rem;">
+      <button type="button" onclick="l8Zustimmung(false)" class="secondary outline" style="margin:0; padding:0.4rem 0.9rem;">Ablehnen</button>
+      <button type="button" onclick="l8Zustimmung(true)" style="margin:0; padding:0.4rem 0.9rem;">Akzeptieren</button>
+    </span>
+  </div>
+</div>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  function l8LadeAnalytics() {
+    if (window.l8AnalyticsGeladen) return;
+    window.l8AnalyticsGeladen = true;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=G-NVRSB6NDXZ';
+    document.head.appendChild(s);
+    gtag('js', new Date());
+    gtag('config', 'G-NVRSB6NDXZ');
+  }
+  function l8Zustimmung(ja) {
+    try { localStorage.setItem('l8_zustimmung', ja ? 'ja' : 'nein'); } catch (e) {}
+    document.getElementById('cookie-banner').style.display = 'none';
+    if (ja) l8LadeAnalytics();
+  }
+  (function () {
+    var wahl = null;
+    try { wahl = localStorage.getItem('l8_zustimmung'); } catch (e) {}
+    if (wahl === 'ja') l8LadeAnalytics();
+    else if (wahl !== 'nein') document.getElementById('cookie-banner').style.display = 'block';
+  })();
+  // Meldet eine Website-Anfrage an GA4 (nur nach Zustimmung)
+  function l8MeldeAnfrage() {
+    if (window.l8AnalyticsGeladen) gtag('event', 'generate_lead', { currency: 'EUR' });
+  }
+</script>
+<!-- /TRACKING -->
 <!-- /FOOTER -->

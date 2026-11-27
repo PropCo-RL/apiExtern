@@ -207,7 +207,8 @@ export function ads_sync_lies_personen(wert) {
 export function ads_sync_lies_tage(wert) {
   const text = String(wert ?? '').toLowerCase().trim();
   if (!text) return null;
-  const offen = /unbefrist|unbestimmt|dauerhaft|langfristig|option auf verl[äa]nger|mit verl[äa]nger|open end|ohne enddatum/;
+  if (/ohne enddatum|open end/.test(text)) return KONFIG.TAGE_OFFEN;
+  const offen = /unbefrist|unbestimmt|dauerhaft|langfristig|option auf verl[äa]nger|mit verl[äa]nger/;
   if (offen.test(text) && !/\b(kein|ohne|nicht)/.test(text)) return KONFIG.TAGE_OFFEN;
   const treffer = text.match(/^(\d+)\s*(tag|tage|tagen|nacht|n[äa]chte|day|days|night|nights|woche|wochen|week|weeks|monat|monate|monaten|month|months)?\.?$/);
   if (!treffer) return null;

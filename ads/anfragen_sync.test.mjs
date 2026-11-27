@@ -95,6 +95,8 @@ test('Personen und Mietdauer aus Freitext', () => {
   assert.equal(ads_sync_lies_tage('2 Wochen, ggf. 3 Monate'), null);
   assert.equal(ads_sync_lies_tage('Zeitraum noch offen'), null);
   assert.equal(ads_sync_lies_tage('keine Verlängerung'), null);
+  assert.equal(ads_sync_lies_tage('ohne Option auf Verlängerung'), null);
+  assert.equal(ads_sync_lies_tage('nicht unbefristet'), null);
   assert.equal(ads_sync_lies_tage('6 Monate'), 180);
   assert.deepEqual(ads_sync_entferne_doppelte([{ anfrage_id: 'a', s: 1 }, { anfrage_id: 'a', s: 2 }, { anfrage_id: 'b' }]),
     [{ anfrage_id: 'a', s: 2 }, { anfrage_id: 'b' }]);

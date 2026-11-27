@@ -145,7 +145,7 @@ async function gads_bq(token, sql, daten) {
 // 4. SITELINKS (einmalig, nur fehlende anlegen)
 // -----------------------------------------------------------------
 async function gads_lege_sitelinks_an(token) {
-  const vorhanden = await gads_frage_ab(token, `SELECT asset.sitelink_asset.link_text FROM campaign_asset
+  const vorhanden = await gads_frage_ab(token, `SELECT campaign.id, asset.sitelink_asset.link_text FROM campaign_asset
     WHERE campaign.id = ${GADS.KAMPAGNE} AND campaign_asset.field_type = 'SITELINK' AND campaign_asset.status = 'ENABLED'`);
   const operationen = gads_baue_sitelink_operationen(vorhanden.map(r => r.asset?.sitelinkAsset?.linkText));
   if (operationen.length === 0) {

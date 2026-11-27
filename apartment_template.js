@@ -12,7 +12,8 @@ function renderApartmentHtml({
   HEADER_HTML,
   FOOTER_HTML,
   API_URL,
-  FAVICON_HTML
+  FAVICON_HTML,
+  BEWERTUNG_KLEIN_HTML
 }) {
   const cleanAddressText = fullAddress ? fullAddress.split('<br>')[0].replace(/<[^>]*>/g, '').trim() : title;
 
@@ -39,6 +40,7 @@ function renderApartmentHtml({
 
       <h2 style="margin-bottom: 0.2rem; margin-top: 1rem;">${title}</h2>
       <p style="color: var(--pico-muted-color); font-size: 0.95rem; margin-bottom: 1.5rem;">${fullAddress}</p>
+      ${BEWERTUNG_KLEIN_HTML || ''}
 
       <div class="detail-grid-container">
         <div>

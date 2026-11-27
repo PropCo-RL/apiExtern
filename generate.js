@@ -31,6 +31,9 @@ const CITY_COORDS = {
 };
 
 let HEADER_HTML = "", FOOTER_HTML = "", FAVICON_HTML = "";
+// Kleines Bewertungs-Abzeichen (Elfsight, immer sichtbar – Inhaber 27.11.) für Stadt- und Wohnungsseiten
+const BEWERTUNG_KLEIN_HTML = `<div style="margin: 0.5rem 0 1rem;"><script src="https://elfsightcdn.com/platform.js" async></script>
+<div class="elfsight-app-166ccf9b-cd91-45a4-851a-9611433f8055" data-elfsight-app-lazy></div></div>`;
 try {
   const hfContent = fs.readFileSync(path.join(__dirname, 'header_footer.html'), 'utf8');
   FAVICON_HTML = hfContent.split('<!-- FAVICON -->')[1]?.split('<!-- /FAVICON -->')[0]?.trim() || '';
@@ -179,7 +182,7 @@ async function buildSite() {
 
     const htmlContent = renderApartmentHtml({
       title, fullAddress, bedrooms, beds, price, description, aptCode,
-      galleryItemsHtml, images, SHARED_CSS, HEADER_HTML, FOOTER_HTML, API_URL, FAVICON_HTML
+      galleryItemsHtml, images, SHARED_CSS, HEADER_HTML, FOOTER_HTML, API_URL, FAVICON_HTML, BEWERTUNG_KLEIN_HTML
     });
 
     fs.writeFileSync(path.join(dir, 'index.html'), htmlContent);
@@ -319,6 +322,7 @@ async function buildSite() {
   <main class="container">
     <div style="margin-bottom: 2rem;">
       <h1 style="margin-bottom: 0.5rem; font-size: 2rem; font-weight: 700;">Monteurwohnungen in ${regionData.name}</h1>
+      ${BEWERTUNG_KLEIN_HTML}
       <p style="color: var(--pico-muted-color); font-size: 1.05rem; margin-bottom: 0.8rem;">
         Voll ausgestattete Unterkünfte für Handwerker & Teams direkt in ${regionData.name} und Umgebung.
       </p>

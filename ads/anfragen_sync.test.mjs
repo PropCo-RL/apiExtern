@@ -90,6 +90,12 @@ test('Personen und Mietdauer aus Freitext', () => {
   assert.equal(ads_sync_lies_tage('06.12.2026'), null);
   assert.equal(ads_sync_lies_tage('10.12.–20.12.'), null);
   assert.equal(ads_sync_lies_personen('2 Teams à 5 Personen'), null);
+  assert.equal(ads_sync_lies_tage('4 Monteure, 3 Wochen'), null);
+  assert.equal(ads_sync_lies_tage('3 Montage'), null);
+  assert.equal(ads_sync_lies_tage('2 Wochen, ggf. 3 Monate'), null);
+  assert.equal(ads_sync_lies_tage('Zeitraum noch offen'), null);
+  assert.equal(ads_sync_lies_tage('keine Verlängerung'), null);
+  assert.equal(ads_sync_lies_tage('6 Monate'), 180);
   assert.deepEqual(ads_sync_entferne_doppelte([{ anfrage_id: 'a', s: 1 }, { anfrage_id: 'a', s: 2 }, { anfrage_id: 'b' }]),
     [{ anfrage_id: 'a', s: 2 }, { anfrage_id: 'b' }]);
   assert.equal(ads_sync_tage_zwischen('2026-12-01', '2026-12-15'), '14 Tage');

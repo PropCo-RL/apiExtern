@@ -202,19 +202,20 @@ export function ads_sync_lies_personen(wert) {
   return zahl > 0 && zahl < 100 ? zahl : null;
 }
 
-// Mietdauer-Freitext -> Tage; offen/verlängerbar -> TAGE_OFFEN; reine Zahl unter 6 oder unklar -> null
+// Mietdauer-Freitext -> Tage; offen/verlängerbar -> TAGE_OFFEN; alles andere Unklare -> null (nicht raten)
+// Erkannt wird nur der ganze Text als „Zahl [Einheit]“, z. B. „7“, „14 Tage“, „2 wochen“, „1 Monat“
 export function ads_sync_lies_tage(wert) {
   const text = String(wert ?? '').toLowerCase().trim();
   if (!text) return null;
-  if (/unbefrist|verl[äa]nger|unbestimmt|dauerhaft|offen|l[äa]ngerfrist|open|longer/.test(text)) return KONFIG.TAGE_OFFEN;
-  const treffer = text.match(/(\d+(?:[.,]\d+)?)\s*([a-zäöü]*)/);
+  const offen = /unbefrist|unbestimmt|dauerhaft|langfristig|option auf verl[äa]nger|mit verl[äa]nger|open end|ohne enddatum/;
+  if (offen.test(text) && !/\bkein/.test(text)) return KONFIG.TAGE_OFFEN;
+  const treffer = text.match(/^(\d+)\s*(tag|tage|tagen|nacht|n[äa]chte|day|days|night|nights|woche|wochen|week|weeks|monat|monate|monaten|month|months)?\.?$/);
   if (!treffer) return null;
-  const zahl = Number(treffer[1].replace(',', '.'));
-  const einheit = treffer[2];
-  if (/^(monat|month|mon)/.test(einheit)) return Math.round(zahl * 30);
-  if (/^(woche|week|wo)/.test(einheit)) return Math.round(zahl * 7);
-  if (/^(tag|nacht|n[äa]cht|day|night)/.test(einheit)) return Math.round(zahl);
-  if (einheit || !/^\d+$/.test(text)) return null; // unbekannte Einheit, Datum („06.12.2026“) o. Ä. -> nicht raten
+  const zahl = Number(treffer[1]);
+  const einheit = treffer[2] || '';
+  if (/^(monat|month)/.test(einheit)) return zahl * 30;
+  if (/^(woche|week)/.test(einheit)) return zahl * 7;
+  if (einheit) return zahl;
   return zahl >= KONFIG.MIN_TAGE ? zahl : null; // reine Zahl „7“ = Tage; „2“ könnte Monate sein
 }
 

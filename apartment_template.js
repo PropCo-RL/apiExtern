@@ -261,7 +261,7 @@ function renderApartmentHtml({
         const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
         const resData = await res.json();
         if (resData.success) { 
-          msgEl.innerText = "Buchung erfolgreich & rechtssicher erfasst!"; 
+          msgEl.innerText = "Buchung erfolgreich & rechtssicher erfasst!"; if (typeof l8MeldeAnfrage === 'function') l8MeldeAnfrage(); 
           msgEl.style.color = "var(--pico-ins-color)"; 
           document.getElementById('booking-form').reset(); 
           goToStep(1); 

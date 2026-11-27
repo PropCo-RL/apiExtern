@@ -99,6 +99,7 @@
         var teile = location.hostname.split('.');
         for (var i = 0; i < teile.length - 1; i++) document.cookie = n + ablauf + '; domain=.' + teile.slice(i).join('.');
       });
+    if (window.l8ElfsightGeladen) location.reload(); // Elfsight lässt sich nur durch Neuladen ganz entfernen
   }
   (function () {
     var wahl = null;

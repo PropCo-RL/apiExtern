@@ -252,6 +252,7 @@ function renderApartmentHtml({
         email: document.getElementById('form-email').value,
         phone: document.getElementById('form-phone').value,
         guestsCount: document.getElementById('form-guests').value,
+        gclid: (typeof l8HoleGclid === 'function') ? l8HoleGclid() : '',
         billingCycle: document.getElementById('form-billing-cycle').value,
         refNumber: document.getElementById('form-ref').value,
         userAgent: navigator.userAgent

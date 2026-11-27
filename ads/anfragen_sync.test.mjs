@@ -36,10 +36,10 @@ test('Wix: Datum als {$date}, ohne ID/Datum -> null', () => {
 test('sites: nur Direktbuchung Website mit gültigem JSON', () => {
   const zeile = ['26.11.2026 10:00:00', 'Direktbuchung Website', 'T', 'go1', 'Firma', '', 'x@firma.de', '0176 1234567',
     '01.12.2026', '15.12.2026', '4', '', '', 'Gebucht', JSON.stringify({ bookingId: 'BK-SITE-123456', timestamp: '2026-11-26T09:00:00.000Z',
-    startDate: '2026-12-01', endDate: '2026-12-15', guestsCount: '4' })];
+    startDate: '2026-12-01', endDate: '2026-12-15', guestsCount: '4', gclid: 'Cj0Kabc' })];
   assert.deepEqual(ads_sync_wandle_sites(zeile),
     { id: 'site:BK-SITE-123456', quelle: 'a.l8street.com', zeit: '2026-11-26T09:00:00.000Z', email: 'x@firma.de', telefon: '0176 1234567',
-      personen: '4', dauer: '14 Tage' });
+      personen: '4', dauer: '14 Tage', gclid: 'Cj0Kabc' });
   assert.equal(ads_sync_wandle_sites(['', 'Profil-Update']), null);
   assert.equal(ads_sync_wandle_sites(zeile.slice(0, 14).concat(['kaputt'])), null);
 });
@@ -52,6 +52,8 @@ test('Zeile: gehasht + OK; ohne Kontakt -> Manuell prüfen', () => {
   assert.equal(ads_sync_baue_zeile({ id: 'x', quelle: 'wix', zeit: 'Z', email: 'kaputt', personen: '4', dauer: '2 Monate' }, 'J').status, 'Manuell prüfen');
   assert.equal(ok.personen, 3);
   assert.equal(ok.aufenthalt_tage, 7);
+  assert.equal(ok.gclid, null);
+  assert.equal(ads_sync_baue_zeile({ id: 'y', quelle: 'a.l8street.com', zeit: 'Z', gclid: 'Cj0Kabc' }, 'J').gclid, 'Cj0Kabc');
   assert.equal(ads_sync_hashe('a').length, 64);
 });
 

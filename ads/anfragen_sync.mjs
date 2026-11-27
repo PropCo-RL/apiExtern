@@ -45,6 +45,7 @@ export const SCHEMA = [
   { name: 'status', type: 'STRING' },
   { name: 'personen', type: 'INTEGER' },
   { name: 'aufenthalt_tage', type: 'INTEGER' },
+  { name: 'gclid', type: 'STRING' },
   { name: 'geladen_am', type: 'TIMESTAMP' }
 ];
 
@@ -159,7 +160,8 @@ export function ads_sync_wandle_sites(zeile) {
   const zeit = ads_sync_lies_datum(payload.timestamp);
   if (!payload.bookingId || !zeit) return null;
   return { id: `site:${payload.bookingId}`, quelle: 'a.l8street.com', zeit, email: zeile[6], telefon: zeile[7],
-    personen: payload.guestsCount, dauer: ads_sync_tage_zwischen(payload.startDate, payload.endDate) };
+    personen: payload.guestsCount, dauer: ads_sync_tage_zwischen(payload.startDate, payload.endDate),
+    gclid: String(payload.gclid || '').trim() };
 }
 
 export function ads_sync_baue_zeile(eintrag, jetzt) {
@@ -177,6 +179,7 @@ export function ads_sync_baue_zeile(eintrag, jetzt) {
     status: ads_sync_bestimme_status(Boolean(email || telefon), personen, tage),
     personen,
     aufenthalt_tage: tage,
+    gclid: eintrag.gclid || null, // gesetzt = Anfrage kam nachweislich über einen Google-Ads-Klick
     geladen_am: jetzt
   };
 }
@@ -270,7 +273,8 @@ async function ads_sync_sichere_tabelle(token) {
 // Fehlende Spalten ergänzen (Tabelle von vor dem 27.11. abends)
 async function ads_sync_sichere_spalten(token) {
   await ads_sync_frage(token, `ALTER TABLE ${ads_sync_tabellen_name()}
-    ADD COLUMN IF NOT EXISTS personen INT64, ADD COLUMN IF NOT EXISTS aufenthalt_tage INT64`);
+    ADD COLUMN IF NOT EXISTS personen INT64, ADD COLUMN IF NOT EXISTS aufenthalt_tage INT64,
+    ADD COLUMN IF NOT EXISTS gclid STRING`);
 }
 
 // MERGE: neue Anfragen einfügen, bei vorhandenen Status/Personen/Tage/Hashes aktualisieren (keine Doppelten)
@@ -283,16 +287,17 @@ async function ads_sync_schreibe_zeilen(token, zeilen) {
       TIMESTAMP(JSON_VALUE(x, '$.conversion_zeit')) conversion_zeit, JSON_VALUE(x, '$.email_sha256') email_sha256,
       JSON_VALUE(x, '$.telefon_sha256') telefon_sha256, JSON_VALUE(x, '$.conversion_name') conversion_name,
       JSON_VALUE(x, '$.status') status, SAFE_CAST(JSON_VALUE(x, '$.personen') AS INT64) personen,
-      SAFE_CAST(JSON_VALUE(x, '$.aufenthalt_tage') AS INT64) aufenthalt_tage, TIMESTAMP(JSON_VALUE(x, '$.geladen_am')) geladen_am
+      SAFE_CAST(JSON_VALUE(x, '$.aufenthalt_tage') AS INT64) aufenthalt_tage, JSON_VALUE(x, '$.gclid') gclid,
+      TIMESTAMP(JSON_VALUE(x, '$.geladen_am')) geladen_am
     FROM UNNEST(JSON_QUERY_ARRAY(@daten)) x) n ON z.anfrage_id = n.anfrage_id
   WHEN MATCHED AND (z.status IS DISTINCT FROM n.status OR z.personen IS DISTINCT FROM n.personen
     OR z.aufenthalt_tage IS DISTINCT FROM n.aufenthalt_tage OR z.email_sha256 IS DISTINCT FROM n.email_sha256
-    OR z.telefon_sha256 IS DISTINCT FROM n.telefon_sha256) THEN
+    OR z.telefon_sha256 IS DISTINCT FROM n.telefon_sha256 OR z.gclid IS DISTINCT FROM n.gclid) THEN
     UPDATE SET status = n.status, personen = n.personen, aufenthalt_tage = n.aufenthalt_tage,
-      email_sha256 = n.email_sha256, telefon_sha256 = n.telefon_sha256
+      email_sha256 = n.email_sha256, telefon_sha256 = n.telefon_sha256, gclid = n.gclid
   WHEN NOT MATCHED THEN INSERT (anfrage_id, quelle, conversion_zeit, email_sha256, telefon_sha256, conversion_name,
-    status, personen, aufenthalt_tage, geladen_am) VALUES (n.anfrage_id, n.quelle, n.conversion_zeit, n.email_sha256,
-    n.telefon_sha256, n.conversion_name, n.status, n.personen, n.aufenthalt_tage, n.geladen_am)`;
+    status, personen, aufenthalt_tage, gclid, geladen_am) VALUES (n.anfrage_id, n.quelle, n.conversion_zeit, n.email_sha256,
+    n.telefon_sha256, n.conversion_name, n.status, n.personen, n.aufenthalt_tage, n.gclid, n.geladen_am)`;
   await ads_sync_frage(token, sql, [{ name: 'daten', parameterType: { type: 'STRING' }, parameterValue: { value: JSON.stringify(zeilen) } }]);
 }
 

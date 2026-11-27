@@ -65,14 +65,32 @@
     gtag('js', new Date());
     gtag('config', 'G-NVRSB6NDXZ');
   }
+  // Google-Klick-ID (gclid) aus der Adresse; gespeichert wird sie nur mit Zustimmung (90 Tage)
+  var l8GclidAusUrl = (function () { try { return new URLSearchParams(location.search).get('gclid') || ''; } catch (e) { return ''; } })();
+  function l8SpeichereGclid() {
+    if (!l8GclidAusUrl) return;
+    try { localStorage.setItem('l8_gclid', JSON.stringify({ id: l8GclidAusUrl, zeit: Date.now() })); } catch (e) {}
+  }
+  // Liefert die gclid für die Buchung (nur mit Zustimmung), sonst ''
+  function l8HoleGclid() {
+    var wahl = null;
+    try { wahl = localStorage.getItem('l8_zustimmung'); } catch (e) {}
+    if (wahl !== 'ja') return '';
+    if (l8GclidAusUrl) return l8GclidAusUrl;
+    try {
+      var g = JSON.parse(localStorage.getItem('l8_gclid') || 'null');
+      return g && g.id && Date.now() - g.zeit < 90 * 86400000 ? g.id : '';
+    } catch (e) { return ''; }
+  }
   function l8Zustimmung(ja) {
     try { localStorage.setItem('l8_zustimmung', ja ? 'ja' : 'nein'); } catch (e) {}
     document.getElementById('cookie-banner').style.display = 'none';
-    if (ja) { window['ga-disable-G-NVRSB6NDXZ'] = false; l8LadeAnalytics(); } else { l8StoppeAnalytics(); }
+    if (ja) { window['ga-disable-G-NVRSB6NDXZ'] = false; l8LadeAnalytics(); l8SpeichereGclid(); } else { l8StoppeAnalytics(); }
   }
   // Ablehnen/Widerruf: GA sofort abschalten und vorhandene _ga-Cookies löschen
   function l8StoppeAnalytics() {
     window['ga-disable-G-NVRSB6NDXZ'] = true;
+    try { localStorage.removeItem('l8_gclid'); } catch (e) {}
     document.cookie.split(';').map(function (c) { return c.split('=')[0].trim(); })
       .filter(function (n) { return n.indexOf('_ga') === 0; })
       .forEach(function (n) {
@@ -85,7 +103,7 @@
   (function () {
     var wahl = null;
     try { wahl = localStorage.getItem('l8_zustimmung'); } catch (e) {}
-    if (wahl === 'ja') l8LadeAnalytics();
+    if (wahl === 'ja') { l8LadeAnalytics(); l8SpeichereGclid(); }
     else if (wahl !== 'nein') document.getElementById('cookie-banner').style.display = 'block';
   })();
   // Widerruf: Wahl löschen und Banner erneut zeigen (GA4 lädt erst nach neuem Klick bzw. Neuladen nicht mehr)

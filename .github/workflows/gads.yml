@@ -1,0 +1,40 @@
+name: Google Ads API (Bericht / Sitelinks)
+
+on:
+  schedule:
+    - cron: '41 4 * * *'
+  workflow_dispatch:
+    inputs:
+      aktion:
+        description: 'bericht oder sitelinks'
+        required: false
+        default: 'bericht'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gads
+  cancel-in-progress: false
+
+jobs:
+  gads:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ads
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Abhängigkeiten
+        run: npm install --no-audit --no-fund
+      - name: Tests
+        run: npm test
+      - name: Google Ads
+        env:
+          G_ADS_KEY: ${{ secrets.G_ADS_KEY }}
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY || secrets.GAPPSCRIPT_SA_CREDENTIALS_WRITE }}
+          AKTION: ${{ github.event.inputs.aktion || 'bericht' }}
+        run: node gads_api.mjs "$AKTION"

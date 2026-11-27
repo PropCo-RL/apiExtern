@@ -94,7 +94,7 @@ function renderApartmentHtml({
             <div><label for="form-end">Abreise</label><input type="date" id="form-end" required></div>
           </div>
           <div class="grid">
-            <div><label for="form-guests">Anzahl der Personen</label><input type="number" id="form-guests" value="4" min="1" required></div>
+            <div><label for="form-guests">Anzahl der Personen</label><input type="number" id="form-guests" placeholder="z. B. 4" min="1" required></div>
             <div>
               <label for="form-billing-cycle">Abrechnungszyklus</label>
               <select id="form-billing-cycle" required>
@@ -105,7 +105,7 @@ function renderApartmentHtml({
               </select>
             </div>
           </div>
-          <div class="step-buttons"><button type="button" class="secondary outline" onclick="l8AnfrageWhatsapp()" style="width: auto;">Unverbindlich per WhatsApp anfragen</button><button type="button" onclick="goToStep(2)" style="width: auto;">Sofort buchen →</button></div>
+          <div class="step-buttons"><button type="button" class="secondary outline" onclick="l8AnfrageWhatsapp()" style="width: auto;">Unverbindlich per WhatsApp anfragen</button><button type="button" onclick="if (l8PruefeReisedaten()) goToStep(2)" style="width: auto;">Sofort buchen →</button></div>
         </div>
 
         <div id="step-2" class="hidden">
@@ -173,11 +173,25 @@ function renderApartmentHtml({
     }
 
     window.onload = function() {
-      const today = new Date(); 
-      const nextWeek = new Date(today.getTime() + 7*24*60*60*1000);
-      document.getElementById('form-start').value = formatDateForInput(today);
-      document.getElementById('form-end').value = formatDateForInput(nextWeek);
+      // Keine Vorbelegung: Zeitraum und Personen trägt der Besucher selbst ein (sonst falsche Lead-Daten)
+      const heute = formatDateForInput(new Date());
+      document.getElementById('form-start').min = heute;
+      document.getElementById('form-end').min = heute;
     };
+
+    // Reisedaten vollständig und Abreise nach Anreise? Sonst Feld markieren und false
+    function l8PruefeReisedaten() {
+      const felder = ['form-start', 'form-end', 'form-guests'].map(id => document.getElementById(id));
+      const leer = felder.find(f => !f.checkValidity());
+      if (leer) { leer.reportValidity(); return false; }
+      if (felder[1].value <= felder[0].value) {
+        felder[1].setCustomValidity('Abreise muss nach der Anreise liegen.');
+        felder[1].reportValidity();
+        felder[1].setCustomValidity('');
+        return false;
+      }
+      return true;
+    }
 
     function goToStep(stepNum) {
       document.getElementById('step-1').classList.add('hidden');
@@ -218,7 +232,7 @@ function renderApartmentHtml({
       const start = document.getElementById('form-start').value;
       const ende = document.getElementById('form-end').value;
       const personen = document.getElementById('form-guests').value;
-      if (!start || !ende) { document.getElementById('form-start').reportValidity(); return; }
+      if (!l8PruefeReisedaten()) return;
       const datum = (d) => d.split('-').reverse().join('.');
       const tage = Math.round((new Date(ende) - new Date(start)) / 86400000);
       const gclid = (typeof l8HoleGclid === 'function') ? l8HoleGclid() : '';
@@ -226,8 +240,12 @@ function renderApartmentHtml({
         + ' (' + document.getElementById('form-apt-code').value + ')\\n'
         + 'Zeitraum: ' + datum(start) + ' – ' + datum(ende) + '\\nPersonen: ' + personen
         + (gclid ? '\\nRef: G-' + gclid.slice(0, 12) : '');
-      if (typeof l8MeldeAnfrage === 'function') l8MeldeAnfrage({ anfrage_art: 'whatsapp', personen: Number(personen), tage: tage });
-      window.open('https://wa.me/4917684801295?text=' + encodeURIComponent(text), '_blank');
+      const url = 'https://wa.me/4917684801295?text=' + encodeURIComponent(text);
+      // Fenster sofort öffnen (sonst blockt das Handy), WhatsApp erst laden, wenn die Meldung an GA4 raus ist
+      const fenster = window.open('', '_blank');
+      const oeffne = () => { if (fenster) fenster.location.href = url; else window.location.href = url; };
+      if (typeof l8MeldeAnfrage === 'function') l8MeldeAnfrage({ anfrage_art: 'whatsapp', personen: Number(personen), tage: tage }, oeffne);
+      else oeffne();
     }
 
     async function handleBookingSubmit(e) {

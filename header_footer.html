@@ -113,9 +113,18 @@
     document.getElementById('cookie-banner').style.display = 'block';
   }
   // Meldet eine Website-Anfrage an GA4 (nur nach Zustimmung)
-  function l8MeldeAnfrage(details) {
-    var daten = Object.assign({ currency: 'EUR', anfrage_art: 'buchung' }, details || {});
-    if (window.l8AnalyticsGeladen && !window['ga-disable-G-NVRSB6NDXZ']) gtag('event', 'generate_lead', daten);
+  // danach (optional): wird aufgerufen, sobald GA4 die Meldung verschickt hat (spätestens nach 1 s bzw. sofort ohne Zustimmung)
+  function l8MeldeAnfrage(details, danach) {
+    var daten = Object.assign({ currency: 'EUR', anfrage_art: 'buchung', transport_type: 'beacon' }, details || {});
+    var fertig = false;
+    var weiter = function () { if (!fertig) { fertig = true; if (danach) danach(); } };
+    if (window.l8AnalyticsGeladen && !window['ga-disable-G-NVRSB6NDXZ']) {
+      daten.event_callback = weiter;
+      gtag('event', 'generate_lead', daten);
+      setTimeout(weiter, 1000);
+    } else {
+      weiter();
+    }
   }
 </script>
 <!-- /TRACKING -->

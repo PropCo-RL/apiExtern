@@ -5,8 +5,9 @@
 //   - Tab 'sites' im Sheet „08.1_API GitHub Site - Extern“ (Buchungsformular auf a.l8street.com)
 // Ziel: BigQuery l8-datenspeicherung-langzeit.kommunikation.google_ads_anfragen
 //   je Anfrage eine Zeile: Anfrage-ID (Bestell-ID gegen Doppelte), Zeit, E-Mail/Telefon als SHA-256, Status
-//   Ohne gültige E-Mail und ohne Telefon: Status 'Manuell prüfen' (wird nicht geraten)
-// Doppelte: vorhandene IDs werden vor dem Einfügen aus BigQuery gelesen.
+//   Status 'OK' (= wird an Google Ads gemeldet) nur bei Kontakt + ab 3 Personen + ab 6 Tagen (unbefristet/verlängerbar zählt);
+//   bekannt zu klein -> 'Nicht qualifiziert'; fehlende/unklare Angaben -> 'Manuell prüfen' (wird nicht geraten)
+// Doppelte: MERGE über anfrage_id – neue Zeilen einfügen, bei vorhandenen Status/Personen/Tage aktualisieren.
 // Lauf: GitHub Action .github/workflows/ads-anfragen.yml (alle 6 Stunden)
 // Secrets: WIX_API_KEY, GCP_SA_KEY (JSON-Schlüssel eines Dienstkontos mit BigQuery-Rechten,
 //   Sheet 08.1 für dessen E-Mail freigegeben „Betrachter“)
@@ -26,8 +27,12 @@ export const KONFIG = {
   SEITE: 100,
   MAX_SEITEN: 10,
   CONVERSION_NAME: 'Angebot anfordern (Website-Formular)',
-  STATUS_OK: 'OK',
-  STATUS_MANUELL: 'Manuell prüfen'
+  STATUS_OK: 'OK', // nur qualifizierte Anfragen: ab MIN_PERSONEN und ab MIN_TAGE (oder offen/verlängerbar)
+  STATUS_NICHT: 'Nicht qualifiziert',
+  STATUS_MANUELL: 'Manuell prüfen',
+  MIN_PERSONEN: 3,
+  MIN_TAGE: 6,
+  TAGE_OFFEN: 999 // „unbefristet“, „Option auf Verlängerung“ u. ä.
 };
 
 export const SCHEMA = [
@@ -38,6 +43,8 @@ export const SCHEMA = [
   { name: 'telefon_sha256', type: 'STRING' },
   { name: 'conversion_name', type: 'STRING' },
   { name: 'status', type: 'STRING' },
+  { name: 'personen', type: 'INTEGER' },
+  { name: 'aufenthalt_tage', type: 'INTEGER' },
   { name: 'geladen_am', type: 'TIMESTAMP' }
 ];
 
@@ -57,10 +64,10 @@ export async function ads_sync_starte_lauf() {
     ...(await ads_sync_lies_wix(ab)).map(e => ads_sync_wandle_wix(e)),
     ...(await ads_sync_lies_sites(token)).map(z => ads_sync_wandle_sites(z))
   ].filter(e => e && new Date(e.zeit) >= ab);
-  const vorhanden = await ads_sync_lies_vorhandene_ids(token);
-  const zeilen = roh.filter(e => !vorhanden.has(e.id)).map(e => ads_sync_baue_zeile(e, jetzt));
-  await ads_sync_fuege_ein(token, zeilen);
-  console.log(`Ads-Anfragen: ${roh.length} gelesen, ${zeilen.length} neu nach BigQuery.`);
+  const zeilen = ads_sync_entferne_doppelte(roh.map(e => ads_sync_baue_zeile(e, jetzt)));
+  await ads_sync_schreibe_zeilen(token, zeilen);
+  const ok = zeilen.filter(z => z.status === KONFIG.STATUS_OK).length;
+  console.log(`Ads-Anfragen: ${zeilen.length} abgeglichen, davon ${ok} qualifiziert (OK).`);
 }
 
 // -----------------------------------------------------------------
@@ -135,10 +142,12 @@ async function ads_sync_lies_sites(token) {
 export function ads_sync_wandle_wix(eintrag) {
   const zeit = ads_sync_lies_datum(eintrag._createdDate);
   if (!eintrag._id || !zeit) return null;
-  return { id: `wix:${eintrag._id}`, quelle: 'wix', zeit, email: eintrag.email, telefon: eintrag.phone };
+  // Wix-Formular: kopieVonDuration = Personen, feldFurKurzeAntwort = Mietdauer (Freitext)
+  return { id: `wix:${eintrag._id}`, quelle: 'wix', zeit, email: eintrag.email, telefon: eintrag.phone,
+    personen: eintrag.kopieVonDuration, dauer: eintrag.feldFurKurzeAntwort };
 }
 
-// Tab 'sites': B Art, G E-Mail, H Telefon, O Payload-JSON (bookingId, timestamp)
+// Tab 'sites': B Art, G E-Mail, H Telefon, O Payload-JSON (bookingId, timestamp, startDate/endDate yyyy-mm-dd, guestsCount)
 export function ads_sync_wandle_sites(zeile) {
   if (String(zeile[1] || '').trim() !== 'Direktbuchung Website') return null;
   let payload;
@@ -149,12 +158,15 @@ export function ads_sync_wandle_sites(zeile) {
   }
   const zeit = ads_sync_lies_datum(payload.timestamp);
   if (!payload.bookingId || !zeit) return null;
-  return { id: `site:${payload.bookingId}`, quelle: 'a.l8street.com', zeit, email: zeile[6], telefon: zeile[7] };
+  return { id: `site:${payload.bookingId}`, quelle: 'a.l8street.com', zeit, email: zeile[6], telefon: zeile[7],
+    personen: payload.guestsCount, dauer: ads_sync_tage_zwischen(payload.startDate, payload.endDate) };
 }
 
 export function ads_sync_baue_zeile(eintrag, jetzt) {
   const email = ads_sync_normalisiere_email(eintrag.email);
   const telefon = ads_sync_normalisiere_telefon(eintrag.telefon);
+  const personen = ads_sync_lies_personen(eintrag.personen);
+  const tage = ads_sync_lies_tage(eintrag.dauer);
   return {
     anfrage_id: eintrag.id,
     quelle: eintrag.quelle,
@@ -162,9 +174,57 @@ export function ads_sync_baue_zeile(eintrag, jetzt) {
     email_sha256: email ? ads_sync_hashe(email) : null,
     telefon_sha256: telefon ? ads_sync_hashe(telefon) : null,
     conversion_name: KONFIG.CONVERSION_NAME,
-    status: email || telefon ? KONFIG.STATUS_OK : KONFIG.STATUS_MANUELL,
+    status: ads_sync_bestimme_status(Boolean(email || telefon), personen, tage),
+    personen,
+    aufenthalt_tage: tage,
     geladen_am: jetzt
   };
+}
+
+// MERGE verträgt je anfrage_id nur eine Quellzeile -> letzte gewinnt
+export function ads_sync_entferne_doppelte(zeilen) {
+  return [...new Map(zeilen.map(zeile => [zeile.anfrage_id, zeile])).values()];
+}
+
+// OK nur bei Kontakt + ab 3 Personen + ab 6 Tagen; bekannt zu klein -> Nicht qualifiziert; sonst Manuell prüfen
+export function ads_sync_bestimme_status(hatKontakt, personen, tage) {
+  if (personen !== null && personen < KONFIG.MIN_PERSONEN) return KONFIG.STATUS_NICHT;
+  if (tage !== null && tage < KONFIG.MIN_TAGE) return KONFIG.STATUS_NICHT;
+  if (!hatKontakt || personen === null || tage === null) return KONFIG.STATUS_MANUELL;
+  return KONFIG.STATUS_OK;
+}
+
+// Genau eine Zahl im Freitext („4“, „4 Personen“); keine oder mehrere Zahlen -> null (nicht raten)
+export function ads_sync_lies_personen(wert) {
+  const treffer = String(wert ?? '').match(/\d+/g);
+  if (!treffer || treffer.length !== 1) return null;
+  const zahl = Number(treffer[0]);
+  return zahl > 0 && zahl < 100 ? zahl : null;
+}
+
+// Mietdauer-Freitext -> Tage; offen/verlängerbar -> TAGE_OFFEN; alles andere Unklare -> null (nicht raten)
+// Erkannt wird nur der ganze Text als „Zahl [Einheit]“, z. B. „7“, „14 Tage“, „2 wochen“, „1 Monat“
+export function ads_sync_lies_tage(wert) {
+  const text = String(wert ?? '').toLowerCase().trim();
+  if (!text) return null;
+  if (/ohne enddatum|open end/.test(text)) return KONFIG.TAGE_OFFEN;
+  const offen = /unbefrist|unbestimmt|dauerhaft|langfristig|option auf verl[äa]nger|mit verl[äa]nger/;
+  if (offen.test(text) && !/\b(kein|ohne|nicht)/.test(text)) return KONFIG.TAGE_OFFEN;
+  const treffer = text.match(/^(\d+)\s*(tag|tage|tagen|nacht|n[äa]chte|day|days|night|nights|woche|wochen|week|weeks|monat|monate|monaten|month|months)?\.?$/);
+  if (!treffer) return null;
+  const zahl = Number(treffer[1]);
+  const einheit = treffer[2] || '';
+  if (/^(monat|month)/.test(einheit)) return zahl * 30;
+  if (/^(woche|week)/.test(einheit)) return zahl * 7;
+  if (einheit) return zahl;
+  return zahl >= KONFIG.MIN_TAGE ? zahl : null; // reine Zahl „7“ = Tage; „2“ könnte Monate sein
+}
+
+// Start/Ende (yyyy-mm-dd) -> Tage oder ''
+export function ads_sync_tage_zwischen(start, ende) {
+  const a = new Date(start), b = new Date(ende);
+  if (isNaN(a.getTime()) || isNaN(b.getTime()) || b <= a) return '';
+  return `${Math.round((b - a) / 86400000)} Tage`;
 }
 
 // Wix liefert Datumsfelder als { $date: '…' } oder als Text
@@ -207,23 +267,46 @@ async function ads_sync_sichere_tabelle(token) {
   }, [409]); // 409 = gibt es schon
 }
 
-async function ads_sync_lies_vorhandene_ids(token) {
-  const abfrage = { query: `SELECT anfrage_id FROM \`${KONFIG.PROJEKT}.${KONFIG.DATASET}.${KONFIG.TABELLE}\``,
-    useLegacySql: false, location: 'EU', timeoutMs: 60000, maxResults: 100000 };
+// Fehlende Spalten ergänzen (Tabelle von vor dem 27.11. abends)
+async function ads_sync_sichere_spalten(token) {
+  await ads_sync_frage(token, `ALTER TABLE ${ads_sync_tabellen_name()}
+    ADD COLUMN IF NOT EXISTS personen INT64, ADD COLUMN IF NOT EXISTS aufenthalt_tage INT64`);
+}
+
+// MERGE: neue Anfragen einfügen, bei vorhandenen Status/Personen/Tage/Hashes aktualisieren (keine Doppelten)
+async function ads_sync_schreibe_zeilen(token, zeilen) {
+  await ads_sync_sichere_spalten(token);
+  if (zeilen.length === 0) return;
+  const t = ads_sync_tabellen_name();
+  const sql = `MERGE ${t} z USING (
+    SELECT JSON_VALUE(x, '$.anfrage_id') anfrage_id, JSON_VALUE(x, '$.quelle') quelle,
+      TIMESTAMP(JSON_VALUE(x, '$.conversion_zeit')) conversion_zeit, JSON_VALUE(x, '$.email_sha256') email_sha256,
+      JSON_VALUE(x, '$.telefon_sha256') telefon_sha256, JSON_VALUE(x, '$.conversion_name') conversion_name,
+      JSON_VALUE(x, '$.status') status, SAFE_CAST(JSON_VALUE(x, '$.personen') AS INT64) personen,
+      SAFE_CAST(JSON_VALUE(x, '$.aufenthalt_tage') AS INT64) aufenthalt_tage, TIMESTAMP(JSON_VALUE(x, '$.geladen_am')) geladen_am
+    FROM UNNEST(JSON_QUERY_ARRAY(@daten)) x) n ON z.anfrage_id = n.anfrage_id
+  WHEN MATCHED AND (z.status IS DISTINCT FROM n.status OR z.personen IS DISTINCT FROM n.personen
+    OR z.aufenthalt_tage IS DISTINCT FROM n.aufenthalt_tage OR z.email_sha256 IS DISTINCT FROM n.email_sha256
+    OR z.telefon_sha256 IS DISTINCT FROM n.telefon_sha256) THEN
+    UPDATE SET status = n.status, personen = n.personen, aufenthalt_tage = n.aufenthalt_tage,
+      email_sha256 = n.email_sha256, telefon_sha256 = n.telefon_sha256
+  WHEN NOT MATCHED THEN INSERT (anfrage_id, quelle, conversion_zeit, email_sha256, telefon_sha256, conversion_name,
+    status, personen, aufenthalt_tage, geladen_am) VALUES (n.anfrage_id, n.quelle, n.conversion_zeit, n.email_sha256,
+    n.telefon_sha256, n.conversion_name, n.status, n.personen, n.aufenthalt_tage, n.geladen_am)`;
+  await ads_sync_frage(token, sql, [{ name: 'daten', parameterType: { type: 'STRING' }, parameterValue: { value: JSON.stringify(zeilen) } }]);
+}
+
+function ads_sync_tabellen_name() {
+  return `\`${KONFIG.PROJEKT}.${KONFIG.DATASET}.${KONFIG.TABELLE}\``;
+}
+
+async function ads_sync_frage(token, sql, parameter = []) {
+  const abfrage = { query: sql, useLegacySql: false, location: 'EU', timeoutMs: 120000, queryParameters: parameter };
   const daten = await ads_sync_rufe_auf(`${BQ}/queries`, {
     method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(abfrage)
   });
-  if (!daten.jobComplete) throw new Error('BigQuery: vorhandene IDs nicht rechtzeitig gelesen – Lauf abgebrochen.');
-  return new Set((daten.rows || []).map(zeile => zeile.f[0].v));
-}
-
-async function ads_sync_fuege_ein(token, zeilen) {
-  if (zeilen.length === 0) return;
-  const daten = await ads_sync_rufe_auf(`${BQ}/datasets/${KONFIG.DATASET}/tables/${KONFIG.TABELLE}/insertAll`, {
-    method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ rows: zeilen.map(zeile => ({ insertId: zeile.anfrage_id, json: zeile })) })
-  });
-  if (daten.insertErrors) throw new Error(`BigQuery: Einfügefehler ${JSON.stringify(daten.insertErrors).slice(0, 500)}`);
+  if (!daten.jobComplete) throw new Error('BigQuery: Abfrage nicht rechtzeitig fertig – Lauf abgebrochen.');
+  return daten;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

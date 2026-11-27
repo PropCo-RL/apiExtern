@@ -1,0 +1,64 @@
+name: KI-Review (Claude)
+
+# Läuft wie Gemini VOR dem Merge bei JEDEM PR (Pflichtprüfung "claude-pflicht").
+# Ohne Code-Änderung (z. B. nur .md) beendet sich das Skript sofort grün (keine Kosten).
+# Rot bei "URTEIL: KRITISCH". Fehlalarm: Label "claude-ok" am PR setzen.
+# Ergebnis als PR-Kommentar. Das Skript ändert und pusht nichts.
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 'Commit-SHA, die geprüft werden soll (leer = neuester Commit)'
+        required: false
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  claude-pflicht:
+    runs-on: ubuntu-latest
+    steps:
+      # Der zu prüfende Stand wird vom Skript direkt aus der Git-Historie gelesen.
+      - name: Code auschecken
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Anthropic SDK installieren
+        run: npm install --no-save --no-audit --no-fund @anthropic-ai/sdk
+
+      - name: Review erstellen
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.CLAUDE_API_KEY_INFOAT }} # neuer Schlüssel (Inhaber 26.11.), Geltungsbereich Organisation
+          ANTHROPIC_WORKSPACE_ID: wrkspc_01EE5K4nHLHB5DSMvewxj2Bk # Kennung, kein Geheimnis
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.inputs.sha || github.sha }}
+          OUT_FILE: review.md
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: node pruefungen/50_ki_claude.mjs
+
+      - name: Bericht als PR-Kommentar posten
+        if: ${{ !cancelled() && github.event_name == 'pull_request' && hashFiles('review.md') != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMMER: ${{ github.event.pull_request.number }}
+        run: node pruefungen/90_pr_kommentar.js review.md "<!-- ki-review-claude -->"
+
+      - name: Bericht in Job-Zusammenfassung
+        if: ${{ !cancelled() && hashFiles('review.md') != '' }}
+        run: cat review.md >> "$GITHUB_STEP_SUMMARY"

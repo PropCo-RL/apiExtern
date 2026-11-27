@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import {
   ads_sync_normalisiere_email, ads_sync_normalisiere_telefon, ads_sync_wandle_wix,
   ads_sync_wandle_sites, ads_sync_baue_zeile, ads_sync_baue_wix_abfrage, ads_sync_hashe,
-  ads_sync_lies_personen, ads_sync_lies_tage, ads_sync_bestimme_status, ads_sync_tage_zwischen
+  ads_sync_lies_personen, ads_sync_lies_tage, ads_sync_bestimme_status, ads_sync_tage_zwischen,
+  ads_sync_entferne_doppelte
 } from './anfragen_sync.mjs';
 
 test('E-Mail: klein, ohne Leerzeichen; ungültig -> leer', () => {
@@ -34,7 +35,8 @@ test('Wix: Datum als {$date}, ohne ID/Datum -> null', () => {
 
 test('sites: nur Direktbuchung Website mit gültigem JSON', () => {
   const zeile = ['26.11.2026 10:00:00', 'Direktbuchung Website', 'T', 'go1', 'Firma', '', 'x@firma.de', '0176 1234567',
-    '2026-12-01', '2026-12-15', '4', '', '', 'Gebucht', JSON.stringify({ bookingId: 'BK-SITE-123456', timestamp: '2026-11-26T09:00:00.000Z' })];
+    '01.12.2026', '15.12.2026', '4', '', '', 'Gebucht', JSON.stringify({ bookingId: 'BK-SITE-123456', timestamp: '2026-11-26T09:00:00.000Z',
+    startDate: '2026-12-01', endDate: '2026-12-15', guestsCount: '4' })];
   assert.deepEqual(ads_sync_wandle_sites(zeile),
     { id: 'site:BK-SITE-123456', quelle: 'a.l8street.com', zeit: '2026-11-26T09:00:00.000Z', email: 'x@firma.de', telefon: '0176 1234567',
       personen: '4', dauer: '14 Tage' });
@@ -84,6 +86,9 @@ test('Personen und Mietdauer aus Freitext', () => {
   assert.equal(ads_sync_lies_tage('unbefristet'), 999);
   assert.equal(ads_sync_lies_tage('1 Woche, Option auf Verlängerung'), 999);
   assert.equal(ads_sync_lies_tage(''), null);
+  assert.equal(ads_sync_lies_tage('12 luni'), null);
+  assert.deepEqual(ads_sync_entferne_doppelte([{ anfrage_id: 'a', s: 1 }, { anfrage_id: 'a', s: 2 }, { anfrage_id: 'b' }]),
+    [{ anfrage_id: 'a', s: 2 }, { anfrage_id: 'b' }]);
   assert.equal(ads_sync_tage_zwischen('2026-12-01', '2026-12-15'), '14 Tage');
   assert.equal(ads_sync_tage_zwischen('', '2026-12-15'), '');
 });

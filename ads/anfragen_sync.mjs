@@ -64,7 +64,7 @@ export async function ads_sync_starte_lauf() {
     ...(await ads_sync_lies_wix(ab)).map(e => ads_sync_wandle_wix(e)),
     ...(await ads_sync_lies_sites(token)).map(z => ads_sync_wandle_sites(z))
   ].filter(e => e && new Date(e.zeit) >= ab);
-  const zeilen = roh.map(e => ads_sync_baue_zeile(e, jetzt));
+  const zeilen = ads_sync_entferne_doppelte(roh.map(e => ads_sync_baue_zeile(e, jetzt)));
   await ads_sync_schreibe_zeilen(token, zeilen);
   const ok = zeilen.filter(z => z.status === KONFIG.STATUS_OK).length;
   console.log(`Ads-Anfragen: ${zeilen.length} abgeglichen, davon ${ok} qualifiziert (OK).`);
@@ -147,7 +147,7 @@ export function ads_sync_wandle_wix(eintrag) {
     personen: eintrag.kopieVonDuration, dauer: eintrag.feldFurKurzeAntwort };
 }
 
-// Tab 'sites': B Art, G E-Mail, H Telefon, I Start, J Ende, K Personen, O Payload-JSON (bookingId, timestamp)
+// Tab 'sites': B Art, G E-Mail, H Telefon, O Payload-JSON (bookingId, timestamp, startDate/endDate yyyy-mm-dd, guestsCount)
 export function ads_sync_wandle_sites(zeile) {
   if (String(zeile[1] || '').trim() !== 'Direktbuchung Website') return null;
   let payload;
@@ -159,7 +159,7 @@ export function ads_sync_wandle_sites(zeile) {
   const zeit = ads_sync_lies_datum(payload.timestamp);
   if (!payload.bookingId || !zeit) return null;
   return { id: `site:${payload.bookingId}`, quelle: 'a.l8street.com', zeit, email: zeile[6], telefon: zeile[7],
-    personen: zeile[10], dauer: ads_sync_tage_zwischen(zeile[8], zeile[9]) };
+    personen: payload.guestsCount, dauer: ads_sync_tage_zwischen(payload.startDate, payload.endDate) };
 }
 
 export function ads_sync_baue_zeile(eintrag, jetzt) {
@@ -179,6 +179,11 @@ export function ads_sync_baue_zeile(eintrag, jetzt) {
     aufenthalt_tage: tage,
     geladen_am: jetzt
   };
+}
+
+// MERGE verträgt je anfrage_id nur eine Quellzeile -> letzte gewinnt
+export function ads_sync_entferne_doppelte(zeilen) {
+  return [...new Map(zeilen.map(zeile => [zeile.anfrage_id, zeile])).values()];
 }
 
 // OK nur bei Kontakt + ab 3 Personen + ab 6 Tagen; bekannt zu klein -> Nicht qualifiziert; sonst Manuell prüfen
@@ -209,6 +214,7 @@ export function ads_sync_lies_tage(wert) {
   if (/^(monat|month|mon)/.test(einheit)) return Math.round(zahl * 30);
   if (/^(woche|week|wo)/.test(einheit)) return Math.round(zahl * 7);
   if (/^(tag|nacht|n[äa]cht|day|night)/.test(einheit)) return Math.round(zahl);
+  if (einheit) return null; // unbekannte Einheit (z. B. „12 luni“) -> nicht raten
   return zahl >= KONFIG.MIN_TAGE ? Math.round(zahl) : null; // „7“ = Tage; „2“ könnte Monate sein
 }
 

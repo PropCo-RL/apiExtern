@@ -1,0 +1,40 @@
+name: Pflicht-Prüfungen (Syntax, Tests, Geheimnisse)
+
+# Job-Namen typpruefung/geheimnisse wie in AppScripts_Write: Pflicht-Prüfungen der Organisations-Regel.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  typpruefung:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax aller Skripte
+        run: |
+          set -e
+          for f in $(git ls-files '*.js' '*.mjs'); do node --check "$f"; done
+      - name: Tests ads/
+        working-directory: ads
+        run: |
+          npm install --no-audit --no-fund
+          npm test
+
+  geheimnisse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: gitleaks
+        run: |
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.21.2 \
+            detect --source /repo --no-banner --redact \
+            --log-opts="${{ github.event.pull_request.base.sha || 'HEAD~1' }}..HEAD"

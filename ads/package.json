@@ -1,0 +1,12 @@
+{
+  "name": "ads-anfragen-sync",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "sync": "node anfragen_sync.mjs"
+  },
+  "dependencies": {
+    "google-auth-library": "9.15.1"
+  }
+}

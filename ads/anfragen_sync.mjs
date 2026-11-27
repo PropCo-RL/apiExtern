@@ -45,6 +45,10 @@ export const SCHEMA = [
 // 1. ORCHESTRATOR
 // -----------------------------------------------------------------
 export async function ads_sync_starte_lauf() {
+  if (!process.env.GCP_SA_KEY || !process.env.WIX_API_KEY) {
+    console.log('Ads-Anfragen: Secrets GCP_SA_KEY/WIX_API_KEY noch nicht eingetragen – Lauf übersprungen.');
+    return;
+  }
   const token = await ads_sync_hole_token();
   await ads_sync_sichere_tabelle(token);
   const ab = new Date(Date.now() - KONFIG.TAGE * 86400000);

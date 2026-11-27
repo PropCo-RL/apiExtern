@@ -43,7 +43,7 @@ jobs:
 
       - name: Review erstellen
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.CLAUDE_API_KEY_INFOAT }} # neuer Schlüssel (Inhaber 26.11.), Geltungsbereich Organisation
+          ANTHROPIC_API_KEY: ${{ secrets.CLAUDE_API_KEY_INFOAT || secrets.CLAUDE_KEY }} # neuer Schlüssel (Inhaber 26.11.), Geltungsbereich Organisation
           ANTHROPIC_WORKSPACE_ID: wrkspc_01EE5K4nHLHB5DSMvewxj2Bk # Kennung, kein Geheimnis
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.inputs.sha || github.sha }}

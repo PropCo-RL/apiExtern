@@ -78,7 +78,8 @@
       .forEach(function (n) {
         var ablauf = '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
         document.cookie = n + ablauf;
-        document.cookie = n + ablauf + '; domain=.' + location.hostname.replace(/^www\./, '');
+        var teile = location.hostname.split('.');
+        for (var i = 0; i < teile.length - 1; i++) document.cookie = n + ablauf + '; domain=.' + teile.slice(i).join('.');
       });
   }
   (function () {
@@ -90,6 +91,7 @@
   // Widerruf: Wahl löschen und Banner erneut zeigen (GA4 lädt erst nach neuem Klick bzw. Neuladen nicht mehr)
   function l8ZeigeBanner() {
     try { localStorage.removeItem('l8_zustimmung'); } catch (e) {}
+    l8StoppeAnalytics();
     document.getElementById('cookie-banner').style.display = 'block';
   }
   // Meldet eine Website-Anfrage an GA4 (nur nach Zustimmung)

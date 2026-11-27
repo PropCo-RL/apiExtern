@@ -68,7 +68,18 @@
   function l8Zustimmung(ja) {
     try { localStorage.setItem('l8_zustimmung', ja ? 'ja' : 'nein'); } catch (e) {}
     document.getElementById('cookie-banner').style.display = 'none';
-    if (ja) l8LadeAnalytics();
+    if (ja) { window['ga-disable-G-NVRSB6NDXZ'] = false; l8LadeAnalytics(); } else { l8StoppeAnalytics(); }
+  }
+  // Ablehnen/Widerruf: GA sofort abschalten und vorhandene _ga-Cookies löschen
+  function l8StoppeAnalytics() {
+    window['ga-disable-G-NVRSB6NDXZ'] = true;
+    document.cookie.split(';').map(function (c) { return c.split('=')[0].trim(); })
+      .filter(function (n) { return n.indexOf('_ga') === 0; })
+      .forEach(function (n) {
+        var ablauf = '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+        document.cookie = n + ablauf;
+        document.cookie = n + ablauf + '; domain=.' + location.hostname.replace(/^www\./, '');
+      });
   }
   (function () {
     var wahl = null;
@@ -83,7 +94,7 @@
   }
   // Meldet eine Website-Anfrage an GA4 (nur nach Zustimmung)
   function l8MeldeAnfrage() {
-    if (window.l8AnalyticsGeladen) gtag('event', 'generate_lead', { currency: 'EUR' });
+    if (window.l8AnalyticsGeladen && !window['ga-disable-G-NVRSB6NDXZ']) gtag('event', 'generate_lead', { currency: 'EUR' });
   }
 </script>
 <!-- /TRACKING -->

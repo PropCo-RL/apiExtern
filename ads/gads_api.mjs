@@ -43,6 +43,7 @@ async function gads_hole_token() {
   } catch (fehler) {
     throw new Error('Secret mit Dienstkonto-Schlüssel ist kein gültiges JSON.');
   }
+  console.log(`Google Ads: Dienstkonto ${schluessel.client_email}`); // muss in Google Ads als Nutzer eingetragen sein
   const { GoogleAuth } = await import('google-auth-library');
   const auth = new GoogleAuth({
     credentials: schluessel,

@@ -32,7 +32,7 @@ const CITY_COORDS = {
 
 let HEADER_HTML = "", FOOTER_HTML = "", FAVICON_HTML = "";
 // Kleines Bewertungs-Abzeichen (Elfsight, immer sichtbar – Inhaber 27.11.) für Stadt- und Wohnungsseiten
-const BEWERTUNG_KLEIN_HTML = `<div style="margin: 0.5rem 0 1rem;"><script src="https://elfsightcdn.com/platform.js" async></script>
+const BEWERTUNG_KLEIN_HTML = `<style>:where(.l8-elfsight) :is(button,[role=button]){background-color:transparent;border:none;box-shadow:none;padding:0;margin:0;width:auto;color:inherit}</style><div class="l8-elfsight" style="margin: 0.5rem 0 1rem;"><script src="https://elfsightcdn.com/platform.js" async></script>
 <div class="elfsight-app-166ccf9b-cd91-45a4-851a-9611433f8055" data-elfsight-app-lazy></div></div>`;
 try {
   const hfContent = fs.readFileSync(path.join(__dirname, 'header_footer.html'), 'utf8');

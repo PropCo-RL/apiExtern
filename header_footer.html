@@ -113,8 +113,9 @@
     document.getElementById('cookie-banner').style.display = 'block';
   }
   // Meldet eine Website-Anfrage an GA4 (nur nach Zustimmung)
-  function l8MeldeAnfrage() {
-    if (window.l8AnalyticsGeladen && !window['ga-disable-G-NVRSB6NDXZ']) gtag('event', 'generate_lead', { currency: 'EUR' });
+  function l8MeldeAnfrage(details) {
+    var daten = Object.assign({ currency: 'EUR', anfrage_art: 'buchung' }, details || {});
+    if (window.l8AnalyticsGeladen && !window['ga-disable-G-NVRSB6NDXZ']) gtag('event', 'generate_lead', daten);
   }
 </script>
 <!-- /TRACKING -->

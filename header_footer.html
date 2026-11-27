@@ -37,7 +37,8 @@
       <strong>Rechtliches</strong><br>
       <small><a href="/impressum/">Impressum</a></small><br>
       <small><a href="/datenschutz/">Datenschutz</a></small><br>
-      <small><a href="/agb/">AGB</a></small>
+      <small><a href="/agb/">AGB</a></small><br>
+      <small><a href="#" onclick="l8ZeigeBanner(); return false;">Cookie-Einstellungen</a></small>
     </div>
   </div>
 </footer>
@@ -75,6 +76,11 @@
     if (wahl === 'ja') l8LadeAnalytics();
     else if (wahl !== 'nein') document.getElementById('cookie-banner').style.display = 'block';
   })();
+  // Widerruf: Wahl löschen und Banner erneut zeigen (GA4 lädt erst nach neuem Klick bzw. Neuladen nicht mehr)
+  function l8ZeigeBanner() {
+    try { localStorage.removeItem('l8_zustimmung'); } catch (e) {}
+    document.getElementById('cookie-banner').style.display = 'block';
+  }
   // Meldet eine Website-Anfrage an GA4 (nur nach Zustimmung)
   function l8MeldeAnfrage() {
     if (window.l8AnalyticsGeladen) gtag('event', 'generate_lead', { currency: 'EUR' });

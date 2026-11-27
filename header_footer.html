@@ -45,7 +45,7 @@
 <!-- TRACKING: GA4 erst nach Zustimmung (Banner, Wahl im Browser gespeichert) -->
 <div id="cookie-banner" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:9999; background:#1e293b; color:#fff; padding:1rem; font-size:0.9rem;">
   <div class="container" style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:center; justify-content:space-between;">
-    <span>Wir nutzen Google Analytics, um zu sehen, wie Besucher die Seite finden. Nur mit Ihrer Zustimmung. <a href="/datenschutz/" style="color:#cbd5e1;">Datenschutz</a></span>
+    <span>Wir nutzen Google Analytics, um zu sehen, wie Besucher die Seite finden, und zeigen Bewertungen über Elfsight. Beides nur mit Ihrer Zustimmung. <a href="/datenschutz/" style="color:#cbd5e1;">Datenschutz</a></span>
     <span style="display:flex; gap:0.5rem;">
       <button type="button" onclick="l8Zustimmung(false)" class="secondary outline" style="margin:0; padding:0.4rem 0.9rem;">Ablehnen</button>
       <button type="button" onclick="l8Zustimmung(true)" style="margin:0; padding:0.4rem 0.9rem;">Akzeptieren</button>
@@ -85,7 +85,7 @@
   function l8Zustimmung(ja) {
     try { localStorage.setItem('l8_zustimmung', ja ? 'ja' : 'nein'); } catch (e) {}
     document.getElementById('cookie-banner').style.display = 'none';
-    if (ja) { window['ga-disable-G-NVRSB6NDXZ'] = false; l8LadeAnalytics(); l8SpeichereGclid(); } else { l8StoppeAnalytics(); }
+    if (ja) { window['ga-disable-G-NVRSB6NDXZ'] = false; l8LadeAnalytics(); l8SpeichereGclid(); if (typeof l8LadeElfsight === 'function') l8LadeElfsight(); } else { l8StoppeAnalytics(); }
   }
   // Ablehnen/Widerruf: GA sofort abschalten und vorhandene _ga-Cookies löschen
   function l8StoppeAnalytics() {

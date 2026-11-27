@@ -105,7 +105,7 @@ function renderApartmentHtml({
               </select>
             </div>
           </div>
-          <div class="step-buttons"><div></div><button type="button" onclick="goToStep(2)" style="width: auto;">Weiter zu Kontaktdaten →</button></div>
+          <div class="step-buttons"><button type="button" class="secondary outline" onclick="l8AnfrageWhatsapp()" style="width: auto;">Unverbindlich per WhatsApp anfragen</button><button type="button" onclick="goToStep(2)" style="width: auto;">Sofort buchen →</button></div>
         </div>
 
         <div id="step-2" class="hidden">
@@ -211,6 +211,23 @@ function renderApartmentHtml({
       if (currentImageIndex < 0) currentImageIndex = currentGalleryImages.length - 1;
       if (currentImageIndex >= currentGalleryImages.length) currentImageIndex = 0;
       document.getElementById('lightboxImg').src = currentGalleryImages[currentImageIndex];
+    }
+
+    // Unverbindliche Anfrage: öffnet WhatsApp mit Wohnung, Zeitraum, Personen (+ Google-Klick-ID) und meldet generate_lead
+    function l8AnfrageWhatsapp() {
+      const start = document.getElementById('form-start').value;
+      const ende = document.getElementById('form-end').value;
+      const personen = document.getElementById('form-guests').value;
+      if (!start || !ende) { document.getElementById('form-start').reportValidity(); return; }
+      const datum = (d) => d.split('-').reverse().join('.');
+      const tage = Math.round((new Date(ende) - new Date(start)) / 86400000);
+      const gclid = (typeof l8HoleGclid === 'function') ? l8HoleGclid() : '';
+      const text = 'Hallo, ich interessiere mich für ' + document.getElementById('form-apt-title').value
+        + ' (' + document.getElementById('form-apt-code').value + ')\\n'
+        + 'Zeitraum: ' + datum(start) + ' – ' + datum(ende) + '\\nPersonen: ' + personen
+        + (gclid ? '\\nRef: G-' + gclid.slice(0, 12) : '');
+      if (typeof l8MeldeAnfrage === 'function') l8MeldeAnfrage({ anfrage_art: 'whatsapp', personen: Number(personen), tage: tage });
+      window.open('https://wa.me/4917684801295?text=' + encodeURIComponent(text), '_blank');
     }
 
     async function handleBookingSubmit(e) {

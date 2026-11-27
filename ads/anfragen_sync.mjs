@@ -194,10 +194,10 @@ export function ads_sync_bestimme_status(hatKontakt, personen, tage) {
   return KONFIG.STATUS_OK;
 }
 
-// Erste Zahl aus Freitext („4“, „4 Personen“); keine Zahl -> null
+// Genau eine Zahl im Freitext („4“, „4 Personen“); keine oder mehrere Zahlen -> null (nicht raten)
 export function ads_sync_lies_personen(wert) {
-  const treffer = String(wert ?? '').match(/\d+/);
-  if (!treffer) return null;
+  const treffer = String(wert ?? '').match(/\d+/g);
+  if (!treffer || treffer.length !== 1) return null;
   const zahl = Number(treffer[0]);
   return zahl > 0 && zahl < 100 ? zahl : null;
 }
@@ -214,8 +214,8 @@ export function ads_sync_lies_tage(wert) {
   if (/^(monat|month|mon)/.test(einheit)) return Math.round(zahl * 30);
   if (/^(woche|week|wo)/.test(einheit)) return Math.round(zahl * 7);
   if (/^(tag|nacht|n[äa]cht|day|night)/.test(einheit)) return Math.round(zahl);
-  if (einheit) return null; // unbekannte Einheit (z. B. „12 luni“) -> nicht raten
-  return zahl >= KONFIG.MIN_TAGE ? Math.round(zahl) : null; // „7“ = Tage; „2“ könnte Monate sein
+  if (einheit || !/^\d+$/.test(text)) return null; // unbekannte Einheit, Datum („06.12.2026“) o. Ä. -> nicht raten
+  return zahl >= KONFIG.MIN_TAGE ? zahl : null; // reine Zahl „7“ = Tage; „2“ könnte Monate sein
 }
 
 // Start/Ende (yyyy-mm-dd) -> Tage oder ''
@@ -271,7 +271,7 @@ async function ads_sync_sichere_spalten(token) {
     ADD COLUMN IF NOT EXISTS personen INT64, ADD COLUMN IF NOT EXISTS aufenthalt_tage INT64`);
 }
 
-// MERGE: neue Anfragen einfügen, bei vorhandenen Status/Personen/Tage aktualisieren (keine Doppelten)
+// MERGE: neue Anfragen einfügen, bei vorhandenen Status/Personen/Tage/Hashes aktualisieren (keine Doppelten)
 async function ads_sync_schreibe_zeilen(token, zeilen) {
   await ads_sync_sichere_spalten(token);
   if (zeilen.length === 0) return;
@@ -284,8 +284,10 @@ async function ads_sync_schreibe_zeilen(token, zeilen) {
       SAFE_CAST(JSON_VALUE(x, '$.aufenthalt_tage') AS INT64) aufenthalt_tage, TIMESTAMP(JSON_VALUE(x, '$.geladen_am')) geladen_am
     FROM UNNEST(JSON_QUERY_ARRAY(@daten)) x) n ON z.anfrage_id = n.anfrage_id
   WHEN MATCHED AND (z.status IS DISTINCT FROM n.status OR z.personen IS DISTINCT FROM n.personen
-    OR z.aufenthalt_tage IS DISTINCT FROM n.aufenthalt_tage) THEN
-    UPDATE SET status = n.status, personen = n.personen, aufenthalt_tage = n.aufenthalt_tage
+    OR z.aufenthalt_tage IS DISTINCT FROM n.aufenthalt_tage OR z.email_sha256 IS DISTINCT FROM n.email_sha256
+    OR z.telefon_sha256 IS DISTINCT FROM n.telefon_sha256) THEN
+    UPDATE SET status = n.status, personen = n.personen, aufenthalt_tage = n.aufenthalt_tage,
+      email_sha256 = n.email_sha256, telefon_sha256 = n.telefon_sha256
   WHEN NOT MATCHED THEN INSERT (anfrage_id, quelle, conversion_zeit, email_sha256, telefon_sha256, conversion_name,
     status, personen, aufenthalt_tage, geladen_am) VALUES (n.anfrage_id, n.quelle, n.conversion_zeit, n.email_sha256,
     n.telefon_sha256, n.conversion_name, n.status, n.personen, n.aufenthalt_tage, n.geladen_am)`;

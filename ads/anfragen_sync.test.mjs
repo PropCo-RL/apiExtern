@@ -87,6 +87,9 @@ test('Personen und Mietdauer aus Freitext', () => {
   assert.equal(ads_sync_lies_tage('1 Woche, Option auf Verlängerung'), 999);
   assert.equal(ads_sync_lies_tage(''), null);
   assert.equal(ads_sync_lies_tage('12 luni'), null);
+  assert.equal(ads_sync_lies_tage('06.12.2026'), null);
+  assert.equal(ads_sync_lies_tage('10.12.–20.12.'), null);
+  assert.equal(ads_sync_lies_personen('2 Teams à 5 Personen'), null);
   assert.deepEqual(ads_sync_entferne_doppelte([{ anfrage_id: 'a', s: 1 }, { anfrage_id: 'a', s: 2 }, { anfrage_id: 'b' }]),
     [{ anfrage_id: 'a', s: 2 }, { anfrage_id: 'b' }]);
   assert.equal(ads_sync_tage_zwischen('2026-12-01', '2026-12-15'), '14 Tage');

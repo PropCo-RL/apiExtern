@@ -26,8 +26,7 @@ export const GADS = {
 // -----------------------------------------------------------------
 export async function gads_starte_lauf(aktion) {
   if (!process.env.G_ADS_KEY || !process.env.GCP_SA_KEY) {
-    console.log('Google Ads: Secrets G_ADS_KEY/GCP_SA_KEY fehlen – Lauf übersprungen.');
-    return;
+    throw new Error('Secrets G_ADS_KEY und/oder Dienstkonto-Schlüssel fehlen – nichts nach BigQuery geschrieben.');
   }
   const token = await gads_hole_token();
   if (aktion === 'sitelinks') return gads_lege_sitelinks_an(token);

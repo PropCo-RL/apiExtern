@@ -33,7 +33,7 @@ Keine Schlüssel in dieser Datei – die stehen nur als GitHub-Secrets im Repo.
 | Angebot anfordern (Website-Formular) | BigQuery `kommunikation.google_ads_anfragen` | `status = OK` | primär – Gebote später darauf |
 | google_ads_anfragen – Alle Datensätze | dieselbe Tabelle | keiner | Beobachtung (Zielvorhaben „Lead-Formular senden“ vor Umstellung auf „Conversions maximieren“ als *nicht Standard* setzen) |
 
-Zuordnung: Transaktions-ID = `anfrage_id`, Zeit = `conversion_zeit`, E-Mail = `email_sha256`, Telefon = `telefon_sha256`, GCLID = `gclid` (Daten bereits SHA-256). Import täglich ca. 6–7 Uhr.
+Zuordnung: Transaktions-ID = `anfrage_id`, Zeit = `conversion_zeit`, E-Mail = `email_sha256`, Telefon = `telefon_sha256`, GCLID = `gclid`. E-Mail und Telefon sind bereits SHA-256-gehasht, die GCLID nicht (Klartext). Import täglich ca. 6–7 Uhr.
 
 **Gute Anfrage (Status OK):** Kontakt vorhanden, ab 3 Personen, ab 6 Tagen (unbefristet/„Option auf Verlängerung“ zählt). Eindeutig darunter = „Nicht qualifiziert“, unklar = „Manuell prüfen“. Alle Anfragen bleiben in BigQuery.
 
@@ -43,7 +43,7 @@ Zuordnung: Transaktions-ID = `anfrage_id`, Zeit = `conversion_zeit`, E-Mail = `e
 | `ads-anfragen.yml` → `ads/anfragen_sync.mjs` | alle 6 Std. | Wix-Formular + Buchungen a.l8street.com → BigQuery `kommunikation.google_ads_anfragen` (MERGE über `anfrage_id`) |
 | `gads.yml` → `ads/gads_api.mjs bericht` | täglich 04:41 UTC | Kosten/Klicks/Conversions je Tag und Anzeigengruppe (30 Tage) → `google_ads.kosten_taeglich` |
 | `gads.yml` → `ads/gads_api.mjs sitelinks` | nur von Hand | fehlende Stadt-Sitelinks anlegen |
-| `build-pages.yml` | ca. alle 30 Min. + nach Merge | Website a.l8street.com neu bauen |
+| `build-pages.yml` | Zeitplan alle 15 Min. (läuft real ca. alle 30), bei Sheet-Änderung (`sheet_updated`) oder von Hand – nicht automatisch beim Merge | Website a.l8street.com neu bauen |
 
 GitHub startet Zeitpläne manchmal nicht (28.11. ausgefallen) – dann unter Actions „Run workflow“.
 

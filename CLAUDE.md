@@ -4,7 +4,7 @@ Gilt für alle PRs. Feste Prüfung: `pruefungen/web_regeln.mjs` (im Job `typprue
 
 ## Ablauf
 - Nie direkt auf `main`. Branch + PR, mergen nur nach OK des Inhabers und wenn `typpruefung`, `geheimnisse`, `claude-pflicht` grün sind.
-- Nach dem Merge baut `build-pages.yml` die Seite neu (sonst spätestens nach ca. 30 Min. automatisch).
+- `build-pages.yml` baut die Seite per Zeitplan (ca. alle 15–30 Min.), bei Sheet-Änderung oder von Hand neu – nicht automatisch beim Merge. Nach einem Merge bei Bedarf „Run workflow“.
 
 ## Code
 Pflicht (PR rot):
